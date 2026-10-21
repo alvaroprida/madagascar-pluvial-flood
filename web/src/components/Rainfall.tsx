@@ -5,6 +5,7 @@ import { dataUrl } from '../data'
 import { fmt, MONTHS } from '../format'
 import { CATEGORY_RAMP, POP_LABEL, POP_SLOT, type Palette } from '../theme'
 import type { Cyclones, FeatureCollection, PopKey, Rainfall as RainfallData } from '../types'
+import { CatchmentRainfall } from './CatchmentRainfall'
 import { Card, Chart, DataTable, Figure, Info, Legend, Segmented, Stat, Steps } from './ui'
 
 const BASEMAP = {
@@ -17,6 +18,7 @@ interface Props {
   rainfall: RainfallData
   cyclones: Cyclones
   tracks: FeatureCollection
+  catchments: FeatureCollection
   palette: Palette
   dark: boolean
 }
@@ -29,7 +31,7 @@ const axisStyle = (p: Palette) => ({
   nameTextStyle: { color: p['text-secondary'] },
 })
 
-export function Rainfall({ rainfall: r, cyclones, tracks, palette, dark }: Props) {
+export function Rainfall({ rainfall: r, cyclones, tracks, catchments, palette, dark }: Props) {
   const [hover, setHover] = useState<{ name: string; year: number; category: string; vmax: number; lng: number; lat: number } | null>(null)
   const [pilot, setPilot] = useState(r.pilots[0].basin_id)
   const pilotData = r.pilots.find((p) => p.basin_id === pilot)!
@@ -277,6 +279,7 @@ export function Rainfall({ rainfall: r, cyclones, tracks, palette, dark }: Props
           open, and switching is one setting.
         </Info>
       </Card>
+      <CatchmentRainfall catchments={catchments} palette={palette} dark={dark} initial={r.pilots[0].basin_id} />
     </div>
   )
 }

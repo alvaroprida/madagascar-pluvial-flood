@@ -86,7 +86,7 @@ export default function App() {
           {tab === 'overview' && <Overview data={data} go={go} />}
           {tab === 'domain' && <Domain domain={data.domain} catchments={data.catchments} palette={palette} dark={dark} />}
           {tab === 'inputs' && <StaticInputs domain={data.domain} landcover={data.landcover} />}
-          {tab === 'rainfall' && <Rainfall rainfall={data.rainfall} cyclones={data.cyclones} tracks={data.tracks} palette={palette} dark={dark} />}
+          {tab === 'rainfall' && <Rainfall rainfall={data.rainfall} cyclones={data.cyclones} tracks={data.tracks} catchments={data.catchments} palette={palette} dark={dark} />}
           {tab === 'setup' && <ModelSetup domain={data.domain} />}
           {tab === 'compute' && <Compute benchmark={data.benchmark} prices={data.prices} palette={palette} />}
           {tab === 'method' && <Method />}
