@@ -244,7 +244,7 @@ export function Rainfall({ rainfall: r, cyclones, tracks, catchments, palette, d
               the total at or above both components everywhere; fitting the three records independently put TC
               depths above total depths in a third of the island at 100 years. As a check, the derived total is
               within {fmt(Math.abs(1 - r.total_vs_direct_fit[0].median) * 100, 0)}% of a direct fit of the whole record at
-              2 years and {fmt((r.total_vs_direct_fit[r.total_vs_direct_fit.length - 1].median - 1) * 100, 0)}% above it at
+              {r.total_vs_direct_fit[0].rp} years and {fmt(((r.total_vs_direct_fit.find((c) => c.rp === 100)?.median ?? 1) - 1) * 100, 0)}% above it at
               100 years (median over land). Ordinary rain controls the frequent events; cyclone depths rise steeply and
               match non-cyclone depths at around 50 years.
             </Info>

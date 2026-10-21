@@ -79,7 +79,8 @@ export function CatchmentRainfall({ catchments, palette, dark, initial }: {
   const [doc, setDoc] = useState<CatchmentDoc>()
   const [metric, setMetric] = useState<Metric>('ppcc_min')
   const [ddfPop, setDdfPop] = useState<PopKey>('total')
-  const [ddfMode, setDdfMode] = useState<'rp' | 'pop'>('rp')
+  const [ddfMode, setDdfMode] = useState<'dur' | 'pop'>('dur')
+  const [ddfDur, setDdfDur] = useState(24)
   const [rp, setRp] = useState(100)
   const [stormH, setStormH] = useState(24)
   const [fitDur, setFitDur] = useState<'24' | '48'>('24')
@@ -120,28 +121,38 @@ export function CatchmentRainfall({ catchments, palette, dark, initial }: {
     axisTick: { show: false }, splitLine: { lineStyle: { color: palette.grid } }, nameTextStyle: { color: palette['text-secondary'] },
   }
   const legend = { top: 0, type: 'scroll' as const, textStyle: { color: palette['text-secondary'] }, itemWidth: 14, itemHeight: 10 }
-  const rpShades = rps.map((_, i) => 0.25 + (0.75 * i) / (rps.length - 1))
+  // ordinal: short durations light, long durations dark
+  const durShades = durs.map((_, i) => 0.3 + (0.7 * i) / (durs.length - 1))
+  const fitted = (d: number) => summary.fit_durations.includes(d)
 
   let ddfChart: EChartsOption = {}, hyetoChart: EChartsOption = {}, fitChart: EChartsOption = {}
   if (doc) {
-    const pts = (pop: PopKey, rIdx: number) => durs.map((d, j) => [d, doc.populations[pop].ddf[rIdx][j]])
+    const curve = (pop: PopKey, j: number) => rps.map((T, i) => [T, doc.populations[pop].ddf[i][j]])
     ddfChart = {
       legend, grid: { left: 56, right: 24, top: 40, bottom: 44 },
-      tooltip: { trigger: 'axis', valueFormatter: (v) => `${fmt(Number(v))} mm` },
-      xAxis: { type: 'log', logBase: 2, min: 1, max: 48, name: 'Duration (h, log scale)', nameLocation: 'middle', nameGap: 28, ...axis,
+      tooltip: { trigger: 'axis', axisPointer: { type: 'line' },
+        formatter: (ps) => {
+          const list = ps as unknown as { seriesName: string; value: [number, number]; color: string }[]
+          return `<b>${list[0].value[0]}-year</b><br/>` + list.filter((q) => q.seriesName)
+            .map((q) => `<span style="color:${q.color}">●</span> ${q.seriesName}: ${fmt(q.value[1])} mm`).join('<br/>')
+        } },
+      xAxis: { type: 'log', min: rps[0], max: rps[rps.length - 1], name: 'Return period (years, log scale)',
+        nameLocation: 'middle', nameGap: 28, ...axis,
         axisLabel: { color: palette['text-secondary'], formatter: (v: number) => `${v}` } },
       yAxis: { type: 'value', name: 'Depth (mm)', ...axis },
       series: ([
-        ...(ddfMode === 'rp'
-          ? rps.map((T, i) => ({ name: `${T} yr`, type: 'line' as const, data: pts(ddfPop, i), symbolSize: 6,
-              lineStyle: { width: T === rp ? 3 : 1.5 },
-              itemStyle: { color: palette[POP_SLOT[ddfPop]], opacity: rpShades[i] } }))
-          : POPS.map((p) => ({ name: POP_LABEL[p], type: 'line' as const, data: pts(p, rps.indexOf(rp)), symbolSize: 6,
-              lineStyle: { width: 2 }, itemStyle: { color: palette[POP_SLOT[p]] } }))),
-      ] as object[]).map((ser, i) => (i === 0 ? { ...ser, markLine: { symbol: 'none', silent: true,
-        lineStyle: { color: palette['text-muted'], type: 'solid', width: 1 },
-        label: { color: palette['text-muted'], position: 'insideEndTop', formatter: '← 1–12 h derived from 24 h' },
-        data: [{ xAxis: 12 }] } } : ser)),
+        ...(ddfMode === 'dur'
+          ? durs.map((d, j) => ({ name: `${d} h${fitted(d) ? '' : ' (derived)'}`, type: 'line' as const,
+              data: curve(ddfPop, j), symbolSize: 6,
+              lineStyle: { width: 2, type: fitted(d) ? 'solid' : 'dashed' },
+              itemStyle: { color: palette[POP_SLOT[ddfPop]], opacity: durShades[j] } }))
+          : POPS.map((p) => ({ name: POP_LABEL[p], type: 'line' as const, data: curve(p, durs.indexOf(ddfDur)),
+              symbolSize: 6, lineStyle: { width: 2, type: fitted(ddfDur) ? 'solid' : 'dashed' },
+              itemStyle: { color: palette[POP_SLOT[p]] } }))),
+      ] as object[]).map((ser, i) => (i === 0 ? { ...ser, markArea: { silent: true,
+        itemStyle: { color: palette.grid, opacity: 0.45 },
+        label: { color: palette['text-muted'], position: 'insideTop', formatter: `extrapolated beyond the ${summary.n_seasons}-season record` },
+        data: [[{ xAxis: 100 }, { xAxis: rps[rps.length - 1] }]] } } : ser)),
     } as EChartsOption
     const dt = stormH <= 3 ? 1 / 6 : 0.5
     hyetoChart = {
@@ -157,14 +168,14 @@ export function CatchmentRainfall({ catchments, palette, dark, initial }: {
           lineStyle: { width: 2 }, itemStyle: { color: palette[POP_SLOT[p]] }, areaStyle: { opacity: 0.08 } }
       }),
     }
-    const Fs = Array.from({ length: 80 }, (_, i) => 0.02 + (0.998 - 0.02) * (i / 79))
+    const Fs = Array.from({ length: 90 }, (_, i) => 0.02 + (0.9992 - 0.02) * (i / 89))
     const n = summary.n_seasons
     fitChart = {
       legend, grid: { left: 56, right: 24, top: 40, bottom: 52 },
       tooltip: { trigger: 'item', formatter: (p) => {
         const q = p as unknown as { seriesName: string; value: [number, number] }
         return `${q.seriesName}<br/>${fmt(q.value[1])} mm · return period ${fmt(rpOf(q.value[0]), 1)} yr` } },
-      xAxis: { type: 'value', min: reduced(0.02), max: reduced(0.998), name: 'Return period (years, Gumbel scale)',
+      xAxis: { type: 'value', min: reduced(0.02), max: reduced(0.9992), name: 'Return period (years, Gumbel scale)',
         nameLocation: 'middle', nameGap: 32, ...axis, axisLabel: { show: false }, splitLine: { show: false } },
       yAxis: { type: 'value', min: 0, name: `${fitDur} h seasonal maximum (mm)`, ...axis, axisLine: { onZero: false, lineStyle: { color: palette.axis } } },
       series: POPS.flatMap((p) => {
@@ -196,7 +207,7 @@ export function CatchmentRainfall({ catchments, palette, dark, initial }: {
       type: 'line', data: [], silent: true,
       markLine: { symbol: 'none', silent: true, lineStyle: { color: palette.grid, type: 'solid' },
         label: { color: palette['text-muted'], formatter: (p: { name: string }) => p.name, position: 'start' },
-        data: [2, 5, 10, 25, 50, 100, 200, 500].map((T) => ({ name: String(T), xAxis: reduced(1 - 1 / T) })) },
+        data: [2, 5, 10, 20, 50, 100, 200, 500, 1000].map((T) => ({ name: String(T), xAxis: reduced(1 - 1 / T) })) },
     })
   }
 
@@ -272,13 +283,14 @@ export function CatchmentRainfall({ catchments, palette, dark, initial }: {
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h3 className="text-sm font-semibold text-ink">Depth-duration-frequency</h3>
                   <div className="flex flex-wrap gap-2">
-                    <Segmented label="Lines" value={ddfMode} onChange={setDdfMode} options={[{ value: 'rp', label: 'Return periods' }, { value: 'pop', label: 'Populations' }]} />
-                    {ddfMode === 'rp'
+                    <Segmented label="Lines" value={ddfMode} onChange={setDdfMode} options={[{ value: 'dur', label: 'Durations' }, { value: 'pop', label: 'Populations' }]} />
+                    {ddfMode === 'dur'
                       ? <Segmented label="Population" value={ddfPop} onChange={setDdfPop} options={POPS.map((p) => ({ value: p, label: POP_LABEL[p] }))} />
-                      : <Segmented label="Return period" value={String(rp)} onChange={(v) => setRp(Number(v))} options={rps.map((T) => ({ value: String(T), label: `${T}` }))} />}
+                      : <Segmented label="Duration" value={String(ddfDur)} onChange={(v) => setDdfDur(Number(v))} options={durs.map((d) => ({ value: String(d), label: `${d} h` }))} />}
                   </div>
                 </div>
-                <Chart option={ddfChart} height={320} label="Depth-duration-frequency curves" />
+                <Chart option={ddfChart} height={340} label="Depth-duration-frequency curves: depth against return period, one line per duration" />
+                <p className="mt-1 text-xs text-ink-3">Solid: durations fitted from the data (24 h, 48 h). Dashed: derived from the 24 h depth.</p>
               </section>
               <section>
                 <div className="flex flex-wrap items-center justify-between gap-2">
