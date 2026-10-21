@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Compute } from './components/Compute'
 import { Domain } from './components/Domain'
 import { Method } from './components/Method'
 import { ModelSetup } from './components/ModelSetup'
@@ -15,6 +16,7 @@ const TABS = [
   ['inputs', 'Static inputs'],
   ['rainfall', 'Rainfall'],
   ['setup', 'Model setup'],
+  ['compute', 'Compute planner'],
   ['method', 'Method & sources'],
 ] as const
 export type TabKey = (typeof TABS)[number][0]
@@ -86,6 +88,7 @@ export default function App() {
           {tab === 'inputs' && <StaticInputs domain={data.domain} landcover={data.landcover} />}
           {tab === 'rainfall' && <Rainfall rainfall={data.rainfall} cyclones={data.cyclones} tracks={data.tracks} palette={palette} dark={dark} />}
           {tab === 'setup' && <ModelSetup domain={data.domain} />}
+          {tab === 'compute' && <Compute benchmark={data.benchmark} prices={data.prices} palette={palette} />}
           {tab === 'method' && <Method />}
         </main>
       )}

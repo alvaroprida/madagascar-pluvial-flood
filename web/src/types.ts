@@ -85,6 +85,8 @@ export interface LandcoverClass {
 export type FeatureCollection = import('geojson').FeatureCollection
 
 export interface SiteData {
+  benchmark: import('./compute').Benchmark
+  prices: import('./compute').Prices
   domain: Domain
   cyclones: Cyclones
   rainfall: Rainfall

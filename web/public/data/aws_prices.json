@@ -1,0 +1,86 @@
+{
+ "on_demand_published": "2026-10-15T19:13:16Z",
+ "spot_retrieved": "2026-10-21",
+ "sources": {
+  "on_demand": "https://aws.amazon.com/ec2/pricing/on-demand/",
+  "spot": "https://aws.amazon.com/ec2/spot/pricing/"
+ },
+ "unit": "USD per vCPU-hour, Linux, median over instance sizes",
+ "regions": {
+  "us-east-1": {
+   "name": "US East (N. Virginia)",
+   "families": {
+    "c6a": {
+     "on_demand": 0.03825,
+     "spot": 0.01761
+    },
+    "c6i": {
+     "on_demand": 0.0425,
+     "spot": 0.01933
+    },
+    "c7a": {
+     "on_demand": 0.05132,
+     "spot": 0.0222
+    },
+    "c7i": {
+     "on_demand": 0.04462,
+     "spot": 0.01918
+    },
+    "c8a": {
+     "on_demand": 0.05389,
+     "spot": null
+    },
+    "c8i": {
+     "on_demand": 0.04686,
+     "spot": null
+    }
+   }
+  },
+  "eu-west-1": {
+   "name": "EU (Ireland)",
+   "families": {
+    "c6a": {
+     "on_demand": 0.04104,
+     "spot": 0.01893
+    },
+    "c6i": {
+     "on_demand": 0.0456,
+     "spot": 0.02017
+    },
+    "c7a": {
+     "on_demand": 0.05506,
+     "spot": 0.02265
+    },
+    "c7i": {
+     "on_demand": 0.04788,
+     "spot": 0.0191
+    },
+    "c8a": {
+     "on_demand": 0.05781,
+     "spot": null
+    },
+    "c8i": {
+     "on_demand": 0.05028,
+     "spot": null
+    }
+   }
+  },
+  "af-south-1": {
+   "name": "Africa (Cape Town)",
+   "families": {
+    "c6i": {
+     "on_demand": 0.057,
+     "spot": 0.01745
+    },
+    "c7i": {
+     "on_demand": 0.05985,
+     "spot": null
+    },
+    "c8i": {
+     "on_demand": 0.06284,
+     "spot": null
+    }
+   }
+  }
+ }
+}

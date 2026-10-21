@@ -10,13 +10,15 @@ async function get<T>(file: string): Promise<T> {
 }
 
 export async function loadData(): Promise<SiteData> {
-  const [domain, cyclones, rainfall, landcover, catchments, tracks] = await Promise.all([
+  const [domain, cyclones, rainfall, landcover, catchments, tracks, benchmark, prices] = await Promise.all([
     get<SiteData['domain']>('domain.json'),
     get<SiteData['cyclones']>('cyclones.json'),
     get<SiteData['rainfall']>('rainfall.json'),
     get<SiteData['landcover']>('landcover_classes.json'),
     get<SiteData['catchments']>('catchments.geojson'),
     get<SiteData['tracks']>('tc_tracks.geojson'),
+    get<SiteData['benchmark']>('compute_benchmark.json'),
+    get<SiteData['prices']>('aws_prices.json'),
   ])
-  return { domain, cyclones, rainfall, landcover, catchments, tracks }
+  return { domain, cyclones, rainfall, landcover, catchments, tracks, benchmark, prices }
 }

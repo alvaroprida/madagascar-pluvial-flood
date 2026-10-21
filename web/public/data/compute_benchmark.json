@@ -1,0 +1,29 @@
+{
+ "date": "2026-10-15",
+ "machine": "Apple M1 Pro laptop, Docker Desktop with 5 CPUs; SFINCS amd64 image emulated on arm64",
+ "sfincs": "SFINCS v2.4.1 (deltares/sfincs-cpu:sfincs-v2.4.1)",
+ "grid_m": 50,
+ "design_storm": "100-year, 24 h, total rainfall, + 12 h drain",
+ "runs": [
+  {
+   "basin_km2": 68,
+   "active_cells": 27691,
+   "simulated_h": 36,
+   "avg_dt_s": 7.069,
+   "wall_s": 124.7,
+   "cell_steps_per_s": 4071170
+  },
+  {
+   "basin_km2": 424,
+   "active_cells": 169450,
+   "simulated_h": 36,
+   "avg_dt_s": 3.854,
+   "wall_s": 1400.4,
+   "cell_steps_per_s": 4068954
+  }
+ ],
+ "domain": {
+  "n_basins": 2129,
+  "area_km2": 593684
+ }
+}

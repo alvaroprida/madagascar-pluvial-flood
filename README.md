@@ -22,6 +22,7 @@ figures the modelling pipeline produces along the way.
 | **Static inputs** | FABDEM topography, Copernicus land cover, GCN250 curve number and SoilGrids soil groups: how each is fetched per basin, national overviews, and QC figures for two pilot basins |
 | **Rainfall** | GPM IMERG daily rainfall split into **tropical-cyclone, non-cyclone and total** rainfall using IBTrACS best tracks: cyclone catalogue and tracks, maps and seasonal cycle of each population, design depths by return period, and the design storm of a pilot basin |
 | **Model setup** | How each SFINCS model is built, with the setup check of the pilot basins |
+| **Compute planner** | Interactive, indicative estimate of simulation time and AWS cost for the scenario matrix (return periods, rainfall populations, storm durations, climate scenarios, grid resolution), from benchmark runs and AWS prices |
 | **Method & sources** | Assumptions, limitations, data licences and references |
 
 ## How it is built
@@ -38,6 +39,12 @@ cd web
 npm ci
 npm run dev       # local preview
 npm run build     # static build in web/dist
+```
+
+## Refreshing the AWS prices
+
+```bash
+python3 tools/fetch_aws_prices.py   # public AWS price feeds -> web/public/data/aws_prices.json
 ```
 
 ## Data and licences
