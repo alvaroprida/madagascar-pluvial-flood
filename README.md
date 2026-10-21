@@ -18,7 +18,7 @@ figures the modelling pipeline produces along the way.
 | Tab | Content |
 |---|---|
 | **Overview** | Purpose, workflow and status |
-| **Modelling domain** | The 276 HydroBASINS catchments used as independent model domains (interactive map) and the distribution of their areas |
+| **Modelling domain** | The 2,129 model catchments (HydroBASINS level 7, split into finer levels where above 1,000 km²): interactive map, area distribution, the comparison of options and how the split works |
 | **Static inputs** | FABDEM topography, Copernicus land cover, GCN250 curve number and SoilGrids soil groups: how each is fetched per basin, national overviews, and QC figures for two pilot basins |
 | **Rainfall** | GPM IMERG daily rainfall split into **tropical-cyclone, non-cyclone and total** rainfall using IBTrACS best tracks: cyclone catalogue and tracks, maps and seasonal cycle of each population, design depths by return period, and the design storm of a pilot basin |
 | **Model setup** | How each SFINCS model is built, with the setup check of the pilot basins |

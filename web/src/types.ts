@@ -2,17 +2,40 @@
 
 export type PopKey = 'total' | 'tc' | 'nontc'
 
-export interface Domain {
-  n_features: number
-  n_parts: number
+export interface SplitNode {
+  level: number
+  pfaf_id: number
+  hybas_id: number
+  sub_area: number
+  children: SplitNode[]
+}
+
+export interface DomainOption {
+  option: string
+  kind: 'level' | 'split'
+  threshold_km2?: number
   n_basins: number
-  threshold_km2: number
-  dropped_parts: number
-  dropped_km2: number
+  median_km2: number
+  max_km2: number
+  above_1000_km2: number
+}
+
+export interface Domain {
+  n_basins: number
+  max_km2: number
+  min_landmass_km2: number
   total_km2: number
   area_stats_km2: { min: number; p25: number; median: number; p75: number; max: number }
+  n_below_50_km2: number
   histogram: { lo: number; hi: number; n: number }[]
-  pilots: { basin_id: string; area_km2: number }[]
+  by_level: Record<string, { n: number; median_km2: number; km2: number }>
+  options: DomainOption[]
+  example: SplitNode[]
+  islets: { landmasses: number; landmasses_kept: number; islet_parts_dropped: number; islet_km2_dropped: number; basins_dropped: number }
+  above_max: { basin_id: string; area_km2: number; endo: number }[]
+  endorheic_sinks: number
+  with_upstream_inflow: number
+  pilots: { basin_id: string; area_km2: number; level: number; upstream_inflow_km2: number }[]
 }
 
 export interface Storm {
