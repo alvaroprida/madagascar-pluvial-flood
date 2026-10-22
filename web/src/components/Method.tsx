@@ -8,6 +8,19 @@ const SOURCES = [
   ['HydroBASINS v1c', 'Lehner, B. & Grill, G. (2013). Global river hydrography and network routing. Hydrol. Process. 27, 2171–2186.', 'HydroSHEDS licence'],
   ['GPM IMERG Final, daily', 'Huffman, G. J. et al. (2019). GPM IMERG Final Precipitation L3 1 day 0.1°. NASA GES DISC.', 'Free and open (NASA)'],
   ['IBTrACS v04r00', 'Knapp, K. R. et al. (2010). The International Best Track Archive for Climate Stewardship (IBTrACS). Bull. Am. Meteorol. Soc. 91, 363–376.', 'Free and open (NOAA)'],
+  ['WorldPop 2020, constrained, UN-adjusted', 'Bondarenko, M. et al. (2020). Census/projection-disaggregated gridded population datasets for 183 countries in 2020 using Built-Settlement Growth Model outputs. WorldPop, University of Southampton, doi:10.5258/SOTON/WP00685.', 'CC BY 4.0'],
+  ['INSTAT', 'Institut National de la Statistique de Madagascar: regional population projections for 2024.', 'Official statistics'],
+  ['LitPop', 'Eberenz, S., Stocker, D., Röösli, T. & Bresch, D. N. (2020). Asset exposure data for global physical risk assessment. Earth Syst. Sci. Data 12, 817–833.', 'CC BY 4.0'],
+  ['Google Open Buildings', 'Sirko, W. et al. (2021). Continental-scale building detection from high resolution satellite imagery. arXiv:2107.12283.', 'CC BY 4.0 / ODbL'],
+  ['GHS-SMOD', 'European Commission, Joint Research Centre: Global Human Settlement Layer, Settlement Model grid (degree of urbanisation).', 'CC BY 4.0'],
+  ['SSP gridded GDP', 'Wang, T. & Sun, F. (2022). Global gridded GDP data set consistent with the shared socioeconomic pathways. Sci. Data 9, 221.', 'CC BY 4.0'],
+  ['SSP gridded population', 'Wang, X., Meng, X. & Long, Y. (2022). Projecting 1 km-grid population distributions from 2020 to 2100 globally under shared socioeconomic pathways. Sci. Data 9, 563.', 'CC BY 4.0'],
+  ['ESA WorldCover 2021 v200', 'Zanaga, D. et al. (2022). ESA WorldCover 10 m 2021 v200. Zenodo, doi:10.5281/zenodo.7254221.', 'CC BY 4.0'],
+  ['FAOSTAT', 'FAO: Crops and livestock products, Value of agricultural production, Land use (Madagascar, 2023).', 'CC BY 4.0'],
+  ['SPAM 2020', 'IFPRI (2024). Global spatially-disaggregated crop production statistics data for 2020. Harvard Dataverse, doi:10.7910/DVN/SWPENT.', 'CC BY 4.0'],
+  ['Administrative boundaries', 'BNGRC fokontany (adm4) polygons, cleaned and merged by OCHA (2018), Madagascar subnational administrative boundaries (COD-AB), Humanitarian Data Exchange. Communes, districts and regions dissolved from them by pcode.', 'CC BY-IGO'],
+  ['Building vulnerability', 'Englhardt, J., de Ruiter, M. C., de Moel, H. & Aerts, J. C. J. H. (2019). Enhancement of large-scale flood risk assessments using building-material-based vulnerability curves for an object-based approach in urban and rural areas. Nat. Hazards Earth Syst. Sci. 19, 1703–1722.', 'CC BY 4.0'],
+  ['Agricultural vulnerability', 'Huizinga, J., de Moel, H. & Szewczyk, W. (2017). Global flood depth-damage functions: methodology and the database with guidelines. JRC Technical Report EUR 28552 EN.', 'European Commission'],
   ['SFINCS', 'Leijnse, T. et al. (2021). Modeling compound flooding in coastal systems using a computationally efficient reduced-physics solver. Coast. Eng. 163, 103796.', 'Open source (Deltares)'],
   ['HydroMT-SFINCS', 'Eilander, D. et al. (2023). HydroMT: automated and reproducible model building and analysis. J. Open Source Softw. 8(83), 4897.', 'MIT'],
 ]
@@ -22,7 +35,10 @@ const LIMITS = [
   ['Domain', 'Catchments are HydroBASINS level 7, split into finer levels where above 1,000 km². Two basins cannot be split further (about 1,400 and 1,950 km²).'],
   ['Uniform rainfall', 'The design storm is applied uniformly over each basin.'],
   ['Data gaps', 'SoilGrids has no data on built-up land and water; GCN250 has gaps on some coastal cells, which become full runoff (conservative).'],
-  ['Validation', 'Results have not been validated against observed flooding yet.'],
+  ['Exposure as GDP', 'Building values are disaggregated GDP (a flow), not replacement costs; losses are in GDP-equivalent USD. Buildings have no occupancy type.'],
+  ['Building classes', 'Material is unknown, so rural buildings take the Englhardt Class I curve and urban buildings Class IIIa, all as single-storey.'],
+  ['Agricultural values', 'National average production value per hectare (FAOSTAT, JRC) on WorldCover cropland and grassland: one year of harvest, no crop calendar. Unit values still to be agreed.'],
+  ['Validation','Results have not been validated against observed flooding yet.'],
 ]
 
 export function Method() {

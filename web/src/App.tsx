@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Compute } from './components/Compute'
 import { Domain } from './components/Domain'
+import { Exposure } from './components/Exposure'
 import { Method } from './components/Method'
 import { ModelSetup } from './components/ModelSetup'
 import { Overview } from './components/Overview'
 import { Rainfall } from './components/Rainfall'
 import { StaticInputs } from './components/StaticInputs'
+import { Vulnerability } from './components/Vulnerability'
 import { loadData } from './data'
 import { usePalette } from './theme'
 import type { SiteData } from './types'
@@ -16,6 +18,8 @@ const TABS = [
   ['inputs', 'Static inputs'],
   ['rainfall', 'Rainfall'],
   ['setup', 'Model setup'],
+  ['exposure', 'Exposure'],
+  ['vulnerability', 'Vulnerability'],
   ['compute', 'Compute planner'],
   ['method', 'Method & sources'],
 ] as const
@@ -88,6 +92,8 @@ export default function App() {
           {tab === 'inputs' && <StaticInputs domain={data.domain} landcover={data.landcover} />}
           {tab === 'rainfall' && <Rainfall rainfall={data.rainfall} cyclones={data.cyclones} tracks={data.tracks} catchments={data.catchments} palette={palette} dark={dark} />}
           {tab === 'setup' && <ModelSetup domain={data.domain} />}
+          {tab === 'exposure' && <Exposure exposure={data.exposure} catchments={data.catchments} palette={palette} dark={dark} />}
+          {tab === 'vulnerability' && <Vulnerability curves={data.vulnerability} exposure={data.exposure} palette={palette} />}
           {tab === 'compute' && <Compute benchmark={data.benchmark} prices={data.prices} palette={palette} />}
           {tab === 'method' && <Method />}
         </main>

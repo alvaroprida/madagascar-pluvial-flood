@@ -82,6 +82,54 @@ export interface LandcoverClass {
   color: string
 }
 
+// Data contract with scripts/export_exposure.py.
+export type Scenario = 'hist_baseline' | 'ssp2_2050' | 'ssp5_2050' | 'ssp2_2085' | 'ssp5_2085'
+type ByScenario<T> = Record<Scenario, T>
+
+export interface Exposure {
+  grid_deg: number
+  scenarios: Scenario[]
+  population: { total: ByScenario<number>; in_domain: ByScenario<number>; n_cells_100m: number }
+  econ: {
+    by_type: Record<'rural' | 'urban', { n_buildings: number; footprint_km2: number; usd: ByScenario<number> }>
+    in_domain: ByScenario<number>
+  }
+  agriculture: { cropland_km2: number; grassland_km2: number; land_km2: number }
+  share_in_domain: { population: number; econ: number }
+  catchments: Units
+  admin: {
+    population: ByScenario<number>   // outside every fokontany polygon
+    usd: ByScenario<number>
+    n_buildings: number
+    n_units: Record<AdminUnit, number>
+    agri_usd_per_ha: { cropland: number; grassland: number }
+  }
+}
+
+export type AdminUnit = 'region' | 'district' | 'commune' | 'fokontany'
+
+/** Exposure summed per polygon: catchments, or one administrative level (admin/adm<N>.json). */
+export interface Units {
+  ids: string[]
+  names?: string[]
+  parents?: string[]
+  level?: number
+  unit?: AdminUnit
+  area_km2: number[]
+  pop: ByScenario<number[]>
+  usd: ByScenario<number[]>
+  urban_usd_share: number[]
+  n_buildings: number[]
+  cropland_km2: number[]
+  grassland_km2: number[]
+}
+
+export interface VulnCurve {
+  curve: number
+  ymax: number
+  points: [number, number][]
+}
+
 export type FeatureCollection = import('geojson').FeatureCollection
 
 export interface SiteData {
@@ -93,4 +141,6 @@ export interface SiteData {
   landcover: LandcoverClass[]
   catchments: FeatureCollection
   tracks: FeatureCollection
+  exposure: Exposure
+  vulnerability: VulnCurve[]
 }
