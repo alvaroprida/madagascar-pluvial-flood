@@ -6,6 +6,7 @@ import { Method } from './components/Method'
 import { ModelSetup } from './components/ModelSetup'
 import { Overview } from './components/Overview'
 import { Rainfall } from './components/Rainfall'
+import { Risk } from './components/Risk'
 import { StaticInputs } from './components/StaticInputs'
 import { Vulnerability } from './components/Vulnerability'
 import { loadData } from './data'
@@ -20,6 +21,7 @@ const TABS = [
   ['setup', 'Model setup'],
   ['exposure', 'Exposure'],
   ['vulnerability', 'Vulnerability'],
+  ['risk', 'Risk'],
   ['compute', 'Compute planner'],
   ['method', 'Method & sources'],
 ] as const
@@ -65,7 +67,8 @@ export default function App() {
 
       <div role="note" className="rounded-lg bg-banner px-4 py-2 text-sm text-ink">
         <strong>Work in progress.</strong> Inputs and model setup are complete; the design flood runs are pending, so
-        no flood hazard results are shown yet.
+        no pluvial flood hazard results are shown yet. The Risk tab demonstrates the loss computation on placeholder
+        (riverine) depth maps.
       </div>
 
       <nav className="flex gap-1 overflow-x-auto border-b border-line" aria-label="Sections">
@@ -94,6 +97,7 @@ export default function App() {
           {tab === 'setup' && <ModelSetup domain={data.domain} />}
           {tab === 'exposure' && <Exposure exposure={data.exposure} catchments={data.catchments} palette={palette} dark={dark} />}
           {tab === 'vulnerability' && <Vulnerability curves={data.vulnerability} exposure={data.exposure} palette={palette} />}
+          {tab === 'risk' && <Risk palette={palette} dark={dark} />}
           {tab === 'compute' && <Compute benchmark={data.benchmark} prices={data.prices} palette={palette} />}
           {tab === 'method' && <Method />}
         </main>

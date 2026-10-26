@@ -87,12 +87,12 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
 }
 
 /** Collapsible data table: every chart has its numbers available as text. */
-export function DataTable({ head, rows, caption }: { head: string[]; rows: (string | number)[][]; caption: string }) {
+export function DataTable({ head, rows, caption, name = 'table' }: { head: string[]; rows: (string | number)[][]; caption: string; name?: string }) {
   const [open, setOpen] = useState(false)
   return (
     <div className="mt-3">
       <button className="text-sm text-accent underline underline-offset-2" onClick={() => setOpen(!open)} aria-expanded={open}>
-        {open ? 'Hide' : 'Show'} table
+        {open ? 'Hide' : 'Show'} {name}
       </button>
       {open && (
         <div className="mt-2 overflow-x-auto">

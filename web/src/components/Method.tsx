@@ -42,6 +42,8 @@ const LIMITS = [
   ['Building classes', 'Material is unknown, so rural buildings take the Englhardt Class I curve and urban buildings Class IIIa, all as single-storey.'],
   ['Agricultural values', 'National average production value per hectare (FAOSTAT, JRC) on WorldCover cropland and grassland: one year of harvest, no crop calendar. Unit values still to be agreed.'],
   ['Climate projections', 'Future rainfall applies one national CMIP6 change factor per scenario (multi-model median of the change in mean annual Rx1day / Rx5day, against each model\'s own 1998–2024 baseline) to the observed curves, equally to every return period and to cyclone and non-cyclone rainfall. Models disagree widely (some project decreases) and resolve tropical cyclones poorly.'],
+  ['Risk results (placeholder)', 'The Risk tab runs on riverine flood depth maps until the pluvial maps are merged, to demonstrate the loss computation. In those maps about 30% of the buildings wet at 100 years are under more than 10 m of water (channels, reservoirs), which the curves treat as total loss.'],
+  ['Average annual loss', 'Trapezoids over 1/T between the 5- and 1,000-year events: nothing is counted for more frequent events and the 1,000-year loss is held to probability zero. Losses use GDP-equivalent building values, so future economic losses grow with the GDP projections.'],
   ['Validation','Results have not been validated against observed flooding yet.'],
 ]
 
