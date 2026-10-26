@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { PopKey } from './types'
+import type { PopKey, Scenario } from './types'
 
 const ROLES = [
   'surface', 'text-primary', 'text-secondary', 'text-muted', 'grid', 'axis', 'accent', 'neutral',
@@ -42,3 +42,12 @@ export const POP_LABEL: Record<PopKey, string> = {
 
 /** Ordinal ramp for the Saffir-Simpson categories, TD (light) to Cat 5 (dark), one hue. */
 export const CATEGORY_RAMP = ['#d9d1ef', '#b9a9e2', '#9a82d4', '#7a5cc4', '#5f43a3', '#452e7c', '#2d1c55']
+
+// Fixed slot per climate scenario (baseline neutral), shared by the rainfall and exposure tabs.
+export const SCENARIO_SLOT: Record<Scenario, 'neutral' | `cat-${1 | 2 | 3 | 4}`> = {
+  hist_baseline: 'neutral',
+  ssp2_2050: 'cat-1',
+  ssp5_2050: 'cat-2',
+  ssp2_2085: 'cat-3',
+  ssp5_2085: 'cat-4',
+}

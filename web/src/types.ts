@@ -130,6 +130,25 @@ export interface VulnCurve {
   points: [number, number][]
 }
 
+export interface ClimateIndexFactor {
+  median: number; p10: number; p90: number; share_increase: number
+  vs_1995_2014: { median: number; p10: number; p90: number }
+  baseline_shift_median: number
+  per_model: Record<string, number>
+}
+export type FutureScenario = Exclude<Scenario, 'hist_baseline'>
+export interface ClimateFactors {
+  method: string
+  models: string[]; n_models: number
+  baseline_period: [number, number]; ar6_reference_period: [number, number]
+  windows: Record<'2050' | '2085', [number, number]>
+  duration_index: Record<string, 'rx1day' | 'rx5day'>
+  spatial_signal_l5: { index: string; scenario: string; period: string; unit_median_range: number
+    typical_model_spread_p10_p90: number; agreement: number; agreement_chance_mean: number; agreement_chance_p95: number }[]
+  scenarios: Record<FutureScenario, { rx1day: ClimateIndexFactor; rx5day: ClimateIndexFactor
+    cc_reference: { additional_warming_c: number; factor: number } }>
+}
+
 export type FeatureCollection = import('geojson').FeatureCollection
 
 export interface SiteData {

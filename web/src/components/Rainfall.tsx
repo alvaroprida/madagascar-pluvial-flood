@@ -6,6 +6,7 @@ import { fmt, MONTHS } from '../format'
 import { CATEGORY_RAMP, POP_LABEL, POP_SLOT, type Palette } from '../theme'
 import type { Cyclones, FeatureCollection, PopKey, Rainfall as RainfallData } from '../types'
 import { CatchmentRainfall } from './CatchmentRainfall'
+import { FutureRainfall } from './FutureRainfall'
 import { Card, Chart, DataTable, Figure, Info, Legend, Segmented, Stat, Steps } from './ui'
 
 const BASEMAP = {
@@ -34,6 +35,7 @@ const axisStyle = (p: Palette) => ({
 export function Rainfall({ rainfall: r, cyclones, tracks, catchments, palette, dark }: Props) {
   const [hover, setHover] = useState<{ name: string; year: number; category: string; vmax: number; lng: number; lat: number } | null>(null)
   const [pilot, setPilot] = useState(r.pilots[0].basin_id)
+  const [view, setView] = useState<'baseline' | 'future'>('baseline')
   const pilotData = r.pilots.find((p) => p.basin_id === pilot)!
 
   // ---- catalogue: storms per year, stacked by peak category (ordinal ramp)
@@ -137,7 +139,7 @@ export function Rainfall({ rainfall: r, cyclones, tracks, catchments, palette, d
   }
   const catColor = ['match', ['get', 'cat'], ...CATEGORY_RAMP.flatMap((c, i) => [i, c]), CATEGORY_RAMP[3]] as unknown as string
 
-  return (
+  const baseline = (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Rainfall record" value={`${r.record.years} years`} sub={`GPM IMERG daily, ${r.record.start.slice(0, 4)}–${r.record.end.slice(0, 4)}, ${r.record.grid_deg}°`} />
@@ -280,6 +282,20 @@ export function Rainfall({ rainfall: r, cyclones, tracks, catchments, palette, d
         </Info>
       </Card>
       <CatchmentRainfall catchments={catchments} palette={palette} dark={dark} initial={r.pilots[0].basin_id} />
+    </div>
+  )
+
+  return (
+    <div className="space-y-4">
+      <nav className="flex gap-1 rounded-lg border border-line bg-surface p-1 text-sm" aria-label="Rainfall views">
+        {([['baseline', 'Baseline rainfall'], ['future', 'Future projected rainfall']] as const).map(([k, label]) => (
+          <button key={k} onClick={() => setView(k)} aria-current={view === k ? 'page' : undefined}
+            className={`rounded-md px-3 py-1.5 ${view === k ? 'bg-accent text-white' : 'text-ink-2 hover:text-ink'}`}>
+            {label}
+          </button>
+        ))}
+      </nav>
+      {view === 'baseline' ? baseline : <FutureRainfall palette={palette} initial={r.pilots[0].basin_id} />}
     </div>
   )
 }

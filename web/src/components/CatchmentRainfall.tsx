@@ -14,15 +14,15 @@ const BASEMAP = {
 const POPS: PopKey[] = ['total', 'tc', 'nontc']
 const EULER = 0.5772
 
-interface Fit { p0: number | null; mu: number | null; beta: number | null; ppcc: number | null; ks: number | null
+export interface Fit { p0: number | null; mu: number | null; beta: number | null; ppcc: number | null; ks: number | null
   maxima: (number | null)[]; depth: (number | null)[]; ci90: (number | null)[] }
-interface CatchmentDoc {
+export interface CatchmentDoc {
   basin_id: string; area_km2: number; level: number; gpm_cells: number
   populations: Record<PopKey, { fits: Record<'24' | '48', Fit>; ddf: (number | null)[][] }>
   total_direct: Record<'24' | '48', (number | null)[]>
   cell_median_total_24h: Record<string, number | null>
 }
-interface Summary {
+export interface Summary {
   seasons: string[]; return_periods: number[]; durations: number[]; fit_durations: number[]
   dd_exponent: number; n_seasons: number; tc_majority: number
   catchments: { id: string; area: number; ppcc: Record<PopKey, number | null>; ppcc_min: number; d100: number; tc_share100: number; arf100: number | null }[]

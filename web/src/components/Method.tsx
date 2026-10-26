@@ -21,6 +21,9 @@ const SOURCES = [
   ['Administrative boundaries', 'BNGRC fokontany (adm4) polygons, cleaned and merged by OCHA (2018), Madagascar subnational administrative boundaries (COD-AB), Humanitarian Data Exchange. Communes, districts and regions dissolved from them by pcode.', 'CC BY-IGO'],
   ['Building vulnerability', 'Englhardt, J., de Ruiter, M. C., de Moel, H. & Aerts, J. C. J. H. (2019). Enhancement of large-scale flood risk assessments using building-material-based vulnerability curves for an object-based approach in urban and rural areas. Nat. Hazards Earth Syst. Sci. 19, 1703–1722.', 'CC BY 4.0'],
   ['Agricultural vulnerability', 'Huizinga, J., de Moel, H. & Szewczyk, W. (2017). Global flood depth-damage functions: methodology and the database with guidelines. JRC Technical Report EUR 28552 EN.', 'European Commission'],
+  ['CMIP6 extreme indices (C3S)', 'Copernicus Climate Change Service: Climate extreme indices and heat stress indicators derived from CMIP6 global climate projections (ETCCDI indices computed with climdex.pcic). Climate Data Store.', 'CMIP6 indicators licence (CICERO)'],
+  ['CMIP6', 'Eyring, V. et al. (2016). Overview of the Coupled Model Intercomparison Project Phase 6 (CMIP6). Geosci. Model Dev. 9, 1937–1958.', 'Per modelling centre'],
+  ['IPCC AR6 WGI', 'IPCC (2021). Summary for Policymakers. In: Climate Change 2021: The Physical Science Basis. Cambridge University Press. (Warming levels, Table SPM.1.)', 'IPCC'],
   ['SFINCS', 'Leijnse, T. et al. (2021). Modeling compound flooding in coastal systems using a computationally efficient reduced-physics solver. Coast. Eng. 163, 103796.', 'Open source (Deltares)'],
   ['HydroMT-SFINCS', 'Eilander, D. et al. (2023). HydroMT: automated and reproducible model building and analysis. J. Open Source Softw. 8(83), 4897.', 'MIT'],
 ]
@@ -38,6 +41,7 @@ const LIMITS = [
   ['Exposure as GDP', 'Building values are disaggregated GDP (a flow), not replacement costs; losses are in GDP-equivalent USD. Buildings have no occupancy type.'],
   ['Building classes', 'Material is unknown, so rural buildings take the Englhardt Class I curve and urban buildings Class IIIa, all as single-storey.'],
   ['Agricultural values', 'National average production value per hectare (FAOSTAT, JRC) on WorldCover cropland and grassland: one year of harvest, no crop calendar. Unit values still to be agreed.'],
+  ['Climate projections', 'Future rainfall applies one national CMIP6 change factor per scenario (multi-model median of the change in mean annual Rx1day / Rx5day, against each model\'s own 1998–2024 baseline) to the observed curves, equally to every return period and to cyclone and non-cyclone rainfall. Models disagree widely (some project decreases) and resolve tropical cyclones poorly.'],
   ['Validation','Results have not been validated against observed flooding yet.'],
 ]
 
