@@ -85,7 +85,7 @@ export function FutureRainfall({ palette, initial }: { palette: Palette; initial
     const idx = indexFor(dur)
     const scaled = (s: FutureScenario, k: 'median' | 'p10' | 'p90') => base.map((v, i) => [rps[i], v * cf.scenarios[s][idx][k]])
     ddfChart = {
-      legend: { ...legend, data: ['Baseline (GPM 1998–2024)', ...FUTURE.map((s) => SCENARIO_LABEL[s])] },
+      legend: { ...legend, data: ['Baseline (GPM 1998–2025)', ...FUTURE.map((s) => SCENARIO_LABEL[s])] },
       grid: { left: 56, right: 24, top: 40, bottom: 44 },
       tooltip: { trigger: 'axis', formatter: (ps) => {
         const list = (ps as unknown as { seriesName: string; value: [number, number]; color: string }[]).filter((q) => !q.seriesName.startsWith('band'))
@@ -101,7 +101,7 @@ export function FutureRainfall({ palette, initial }: { palette: Palette; initial
             areaStyle: { color: color(band), opacity: 0.15 },
             data: scaled(band, 'p90').map(([x, y], i) => [x, y - (scaled(band, 'p10')[i][1] as number)]) },
         ] : []),
-        { name: 'Baseline (GPM 1998–2024)', type: 'line', data: rps.map((T, i) => [T, base[i]]), symbolSize: 6,
+        { name: 'Baseline (GPM 1998–2025)', type: 'line', data: rps.map((T, i) => [T, base[i]]), symbolSize: 6,
           lineStyle: { width: 2.5, color: color('hist_baseline') }, itemStyle: { color: color('hist_baseline') } },
         ...FUTURE.map((s) => ({ name: SCENARIO_LABEL[s], type: 'line' as const, data: scaled(s, 'median'), symbolSize: 5,
           lineStyle: { width: 2, color: color(s) }, itemStyle: { color: color(s) } })),

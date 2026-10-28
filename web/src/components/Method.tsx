@@ -7,7 +7,7 @@ const SOURCES = [
   ['SoilGrids 2.0', 'Poggio, L. et al. (2021). SoilGrids 2.0: producing soil information for the globe with quantified spatial uncertainty. SOIL 7, 217–240.', 'CC BY 4.0'],
   ['HydroBASINS v1c', 'Lehner, B. & Grill, G. (2013). Global river hydrography and network routing. Hydrol. Process. 27, 2171–2186.', 'HydroSHEDS licence'],
   ['GPM IMERG Final, daily', 'Huffman, G. J. et al. (2019). GPM IMERG Final Precipitation L3 1 day 0.1°. NASA GES DISC.', 'Free and open (NASA)'],
-  ['IBTrACS v04r00', 'Knapp, K. R. et al. (2010). The International Best Track Archive for Climate Stewardship (IBTrACS). Bull. Am. Meteorol. Soc. 91, 363–376.', 'Free and open (NOAA)'],
+  ['IBTrACS v04r01', 'Knapp, K. R. et al. (2010). The International Best Track Archive for Climate Stewardship (IBTrACS). Bull. Am. Meteorol. Soc. 91, 363–376.', 'Free and open (NOAA)'],
   ['WorldPop 2020, constrained, UN-adjusted', 'Bondarenko, M. et al. (2020). Census/projection-disaggregated gridded population datasets for 183 countries in 2020 using Built-Settlement Growth Model outputs. WorldPop, University of Southampton, doi:10.5258/SOTON/WP00685.', 'CC BY 4.0'],
   ['INSTAT', 'Institut National de la Statistique de Madagascar: regional population projections for 2024.', 'Official statistics'],
   ['LitPop', 'Eberenz, S., Stocker, D., Röösli, T. & Bresch, D. N. (2020). Asset exposure data for global physical risk assessment. Earth Syst. Sci. Data 12, 817–833.', 'CC BY 4.0'],
@@ -30,10 +30,10 @@ const SOURCES = [
 
 const LIMITS = [
   ['Sub-daily rainfall', 'The rainfall record is daily. The 30-minute design profile relies on a depth-duration exponent (1/3) that is not calibrated yet; it sets the peak intensity and so the peak flood depth.'],
-  ['Stationarity', 'The Gumbel fits assume a stationary climate over 1998–2024. With 26 seasons, 100-year depths are indicative.'],
+  ['Stationarity', 'The Gumbel fits assume a stationary climate over the 27 cyclone seasons 1998/99–2024/25 (GPM to September 2025). 100-year depths are indicative.'],
   ['Independent populations', 'The total design depth combines the cyclone and non-cyclone fits assuming their seasonal maxima are independent. It agrees with a direct fit of the whole record within a few per cent.'],
   ['Single-peak storm', 'The alternating-block hyetograph has one central peak. Slow cyclones with several rainbands are better represented by observed events.'],
-  ['Cyclone attribution', 'A cell-day counts as cyclone rainfall within 500 km of a storm centre, at daily resolution. A wider radius raises the cyclone share.'],
+  ['Cyclone attribution', 'A cell-day counts as cyclone rainfall within 500 km of a catalogued storm centre, at daily resolution. A wider radius raises the cyclone share. The 2000–2022 catalogue holds the storms that caused damage in Madagascar, so weaker or offshore storms without reported damage are not in it and their rain counts as non-cyclone. Storms of 1998–1999 and 2022–2025 were added by distance (landfall or within 300 km of the coast).'],
   ['Upstream inflow', 'Each catchment is modelled on its own, so about 900 of the 2,129 catchments miss the water arriving from catchments upstream. Main river reaches will be masked as fluvial; the model covers local pluvial flooding, not river floods.'],
   ['Domain', 'Catchments are HydroBASINS level 7, split into finer levels where above 1,000 km². Two basins cannot be split further (about 1,400 and 1,950 km²).'],
   ['Uniform rainfall', 'The design storm is applied uniformly over each basin.'],

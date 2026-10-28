@@ -9,6 +9,9 @@ import { CatchmentRainfall } from './CatchmentRainfall'
 import { FutureRainfall } from './FutureRainfall'
 import { Card, Chart, DataTable, Figure, Info, Legend, Segmented, Stat, Steps } from './ui'
 
+/** Display name: unnamed systems carry their date in the catalogue key (Unnamed_19980123). */
+const stormLabel = (name: string) => (name.startsWith('Unnamed_') ? 'Unnamed' : name)
+
 const BASEMAP = {
   light: 'https://tiles.openfreemap.org/styles/positron',
   dark: 'https://tiles.openfreemap.org/styles/dark',
@@ -40,7 +43,8 @@ export function Rainfall({ rainfall: r, cyclones, tracks, catchments, palette, d
 
   // ---- catalogue: storms per year, stacked by peak category (ordinal ramp)
   const catalogue: EChartsOption = useMemo(() => {
-    const years = Array.from({ length: 2022 - 2000 + 1 }, (_, i) => 2000 + i)
+    const y0 = Math.min(...cyclones.storms.map((s) => s.year)), y1 = Math.max(...cyclones.storms.map((s) => s.year))
+    const years = Array.from({ length: y1 - y0 + 1 }, (_, i) => y0 + i)
     return {
       grid: { left: 40, right: 12, top: 12, bottom: 32 },
       tooltip: {
@@ -49,7 +53,7 @@ export function Rainfall({ rainfall: r, cyclones, tracks, catchments, palette, d
           const year = (ps as unknown as { axisValue: string }[])[0].axisValue
           const list = cyclones.storms.filter((s) => s.year === Number(year))
           return `<b>${year}</b>: ${list.length} storm${list.length === 1 ? '' : 's'}<br/>` +
-            list.map((s) => `${s.name} · ${s.category} · ${s.vmax_kmh} km/h`).join('<br/>')
+            list.map((s) => `${stormLabel(s.name)} · ${s.category} · ${s.vmax_kmh} km/h`).join('<br/>')
         },
       },
       xAxis: { type: 'category', data: years.map(String), ...axisStyle(palette),
@@ -150,8 +154,8 @@ export function Rainfall({ rainfall: r, cyclones, tracks, catchments, palette, d
 
       <Card title="Splitting the rainfall record into cyclone and non-cyclone rainfall">
         <Steps items={[
-          { title: 'Catalogue', body: <>{cyclones.n_catalogue} storms that made landfall on, or passed close to, Madagascar between 2000 and 2022, with their date of passage.</> },
-          { title: 'Best tracks', body: <>Each storm is matched to <b>IBTrACS v04r00</b> (South Indian basin, NOAA NCEI): a geographic screen (a fix within 8° of the island), the name (tested against each part of combined names such as <i>Eline:Leone</i>) and the date of passage to pick between storms that share a name. {cyclones.unmatched.length > 0 && <>One entry has no name and no storm within ±5 days ({cyclones.unmatched.map((u) => u.name).join(', ')}); it is reported, not substituted.</>}</> },
+          { title: 'Catalogue', body: <>{cyclones.n_catalogue} storms that made landfall on, or passed close to, Madagascar, with their date of passage. The 2000–2022 storms are those that caused damage in Madagascar; those of 1998–1999 and July 2022 – September 2025 were added with an explicit rule: every IBTrACS storm that made landfall or passed within 300 km of the coast (the farthest pass in the 2000–2022 list is 288 km), matched by its IBTrACS id.</> },
+          { title: 'Best tracks', body: <>Each storm is matched to <b>IBTrACS v04r01</b> (South Indian basin, NOAA NCEI): a geographic screen (a fix within 8° of the island), the name (tested against each part of combined names such as <i>Eline:Leone</i>) and the date of passage to pick between storms that share a name. {cyclones.unmatched.length > 0 && <>One entry has no name and no storm within ±5 days ({cyclones.unmatched.map((u) => u.name).join(', ')}); it is reported, not substituted.</>}</> },
           { title: 'Attribution', body: <>A GPM cell-day is <b>cyclone rainfall</b> when any 6-hourly fix of a matched storm on that day lies within <b>{r.radius_km} km</b> of the cell centre. The radius is generous next to a typical radius of maximum wind (~50 km), to catch the outer rainbands. It is the main tunable assumption: a wider radius raises the cyclone share.</> },
           { title: 'Three populations', body: <><b>Tropical-cyclone</b> rainfall (flagged cell-days), <b>non-TC</b> rainfall (all other cell-days) and <b>total</b> rainfall (the unmodified record). TC and non-TC are complementary: together they reproduce the record exactly.</> },
         ]} />
@@ -169,7 +173,7 @@ export function Rainfall({ rainfall: r, cyclones, tracks, catchments, palette, d
               ))}
             </ul>
             <DataTable caption="Cyclone catalogue" head={['Storm', 'Date of passage', 'Peak wind (km/h)', 'Category']}
-              rows={cyclones.storms.map((s) => [s.name, s.date, s.vmax_kmh, s.category])} />
+              rows={cyclones.storms.map((s) => [stormLabel(s.name), s.date, s.vmax_kmh, s.category])} />
           </div>
           <div className="relative h-[440px] overflow-hidden rounded-lg border border-line">
             <Map
@@ -181,7 +185,7 @@ export function Rainfall({ rainfall: r, cyclones, tracks, catchments, palette, d
               onMouseLeave={() => setHover(null)}
               // the container settles after the grid lays out; re-measure so WebGL fills it
               onLoad={(e) => e.target.resize()}
-              attributionControl={{ compact: true, customAttribution: 'Tracks: IBTrACS v04r00 (NOAA NCEI)' }}
+              attributionControl={{ compact: true, customAttribution: 'Tracks: IBTrACS v04r01 (NOAA NCEI)' }}
             >
               <Source id="tracks" type="geojson" data={tracks}>
                 <Layer id="track" type="line" layout={{ 'line-join': 'round', 'line-cap': 'round' }}
@@ -193,7 +197,7 @@ export function Rainfall({ rainfall: r, cyclones, tracks, catchments, palette, d
               </Source>
               {hover && (
                 <Popup longitude={hover.lng} latitude={hover.lat} closeButton={false} offset={12}>
-                  <div className="font-medium">{hover.name} ({hover.year})</div>
+                  <div className="font-medium">{stormLabel(hover.name)} ({hover.year})</div>
                   <div className="text-ink-2">{hover.category} · peak {fmt(hover.vmax * 1.852)} km/h</div>
                 </Popup>
               )}

@@ -25,6 +25,7 @@ export interface CatchmentDoc {
 export interface Summary {
   seasons: string[]; return_periods: number[]; durations: number[]; fit_durations: number[]
   dd_exponent: number; n_seasons: number; tc_majority: number
+  fit_quality: { ppcc_critical: Record<'0.05' | '0.01', number>; share_below: Record<PopKey, Record<'0.05' | '0.01', number>>; catchments_any_below_1pct: number }
   catchments: { id: string; area: number; ppcc: Record<PopKey, number | null>; ppcc_min: number; d100: number; tc_share100: number; arf100: number | null }[]
 }
 type Metric = 'd100' | 'ppcc_min' | 'arf100'
@@ -105,10 +106,13 @@ export function CatchmentRainfall({ catchments, palette, dark, initial }: {
   const rps = summary.return_periods
   const durs = summary.durations
 
+  const crit = summary.fit_quality.ppcc_critical
+  const below = summary.fit_quality.share_below
+  const pctOf = (p: PopKey, a: '0.05' | '0.01') => `${fmt(100 * below[p][a], 0)}%`
   // map colouring: one hue, light to dark, by the chosen metric
   const ramp: Record<Metric, { stops: number[]; label: string; reverse?: boolean }> = {
     d100: { stops: [120, 160, 200, 240, 280, 320], label: '100-yr 24 h depth (mm)' },
-    ppcc_min: { stops: [0.85, 0.916, 0.947, 0.97, 0.98, 0.99], label: 'Fit quality, lowest PPCC of the 3 populations (< 0.916 fails the 1% test, < 0.947 the 5% test)', reverse: true },
+    ppcc_min: { stops: [0.85, crit['0.01'], crit['0.05'], 0.97, 0.98, 0.99], label: `Fit quality, lowest PPCC of the 3 populations (< ${fmt(crit['0.01'], 3)} fails the 1% test, < ${fmt(crit['0.05'], 3)} the 5% test)`, reverse: true },
     arf100: { stops: [0.85, 0.9, 0.93, 0.96, 0.98, 1.0], label: 'Areal / single-cell 100-yr depth', reverse: true },
   }
   const r = ramp[metric]
@@ -347,10 +351,12 @@ export function CatchmentRainfall({ catchments, palette, dark, initial }: {
         without rain of a population are not drawn), lines the fitted Gumbel, shading its 90% confidence band (frequency-factor
         method). Points that leave the band in a systematic way, a curved trend, or one isolated extreme indicate a poor fit.
         PPCC is the correlation between the sorted maxima and the fitted quantiles (1 = perfect). Even genuinely Gumbel data
-        of {summary.n_seasons} seasons scatter: in 20,000 simulated samples, 5% fell below 0.947 and 1% below 0.916, which are
-        therefore the test thresholds. Cyclone fits behave as expected (9% below 0.947, 2% below 0.916). Total and non-TC fits
-        have about twice the expected share below 0.947 and four to five times below 0.916, mostly from single outlier seasons
-        that inflate the method-of-moments fit; 182 catchments (8.5%) have at least one population below 0.916. With {summary.n_seasons} seasons, depths beyond about 100
+        of {summary.n_seasons} seasons scatter: in 20,000 simulated samples, 5% fell below {fmt(crit['0.05'], 3)} and 1% below {fmt(crit['0.01'], 3)},
+        which are therefore the test thresholds. Share of catchments below them (5% and 1% expected): cyclone {pctOf('tc', '0.05')} and{' '}
+        {pctOf('tc', '0.01')}, non-cyclone {pctOf('nontc', '0.05')} and {pctOf('nontc', '0.01')}, total {pctOf('total', '0.05')} and{' '}
+        {pctOf('total', '0.01')}. The excess comes mostly from single outlier seasons that inflate the method-of-moments fit;{' '}
+        {fmt(summary.fit_quality.catchments_any_below_1pct)} catchments ({fmt((100 * summary.fit_quality.catchments_any_below_1pct) / summary.catchments.length, 1)}%)
+        have at least one population below {fmt(crit['0.01'], 3)}. With {summary.n_seasons} seasons, depths beyond about 100
         years are extrapolations, and 1–12 h depths are derived from the 24 h depth with the uncalibrated exponent
         n = {fmt(summary.dd_exponent, 2)}. A catchment-day counts as cyclone rain when at least {fmt(summary.tc_majority * 100, 0)}% of the
         catchment's area is attributed to a storm. GPM daily totals use fixed calendar days, which tends to underestimate true

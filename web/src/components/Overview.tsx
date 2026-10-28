@@ -18,7 +18,7 @@ export function Overview({ data, go }: { data: SiteData; go: (k: TabKey) => void
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat hero label="Catchments" value={domain.n_basins} sub="independent SFINCS models" />
-        <Stat hero label="Cyclones" value={cyclones.n_matched} sub={`matched best tracks, 2000–2022`} />
+        <Stat hero label="Cyclones" value={cyclones.n_matched} sub={`matched best tracks, 1998–2025`} />
         <Stat hero label="Cyclone share" value={`${fmt(rainfall.tc_share_pct.land_mean, 1)}%`} sub="of annual rainfall over land" />
         <Stat hero label="Pilot basins" value={domain.pilots.length} sub={domain.pilots.map((p) => `${Math.round(p.area_km2)} km²`).join(' and ')} />
       </div>
