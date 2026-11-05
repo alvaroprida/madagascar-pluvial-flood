@@ -6,8 +6,9 @@ import { fmt, MONTHS } from '../format'
 import { CATEGORY_RAMP, POP_LABEL, POP_SLOT, type Palette } from '../theme'
 import type { Cyclones, FeatureCollection, PopKey, Rainfall as RainfallData } from '../types'
 import { CatchmentRainfall } from './CatchmentRainfall'
+import { DesignRainfall } from './DesignRainfall'
 import { FutureRainfall } from './FutureRainfall'
-import { Card, Chart, DataTable, Figure, Info, Legend, Segmented, Stat, Steps } from './ui'
+import { Card, Chart, DataTable, Figure, Info, Legend, Stat, Steps } from './ui'
 
 /** Display name: unnamed systems carry their date in the catalogue key (Unnamed_19980123). */
 const stormLabel = (name: string) => (name.startsWith('Unnamed_') ? 'Unnamed' : name)
@@ -37,9 +38,7 @@ const axisStyle = (p: Palette) => ({
 
 export function Rainfall({ rainfall: r, cyclones, tracks, catchments, palette, dark }: Props) {
   const [hover, setHover] = useState<{ name: string; year: number; category: string; vmax: number; lng: number; lat: number } | null>(null)
-  const [pilot, setPilot] = useState(r.pilots[0].basin_id)
   const [view, setView] = useState<'baseline' | 'future'>('baseline')
-  const pilotData = r.pilots.find((p) => p.basin_id === pilot)!
 
   // ---- catalogue: storms per year, stacked by peak category (ordinal ramp)
   const catalogue: EChartsOption = useMemo(() => {
@@ -95,46 +94,13 @@ export function Rainfall({ rainfall: r, cyclones, tracks, catchments, palette, d
     tooltip: { trigger: 'axis', valueFormatter: (v) => `${fmt(Number(v))} mm` },
     xAxis: { type: 'category', data: r.growth_curves_mm.total.map((g) => String(g.rp)), name: 'Return period (years)',
              nameLocation: 'middle', nameGap: 28, ...axisStyle(palette), boundaryGap: false },
-    yAxis: { type: 'value', name: '24 h depth (mm)', ...axisStyle(palette) },
+    yAxis: { type: 'value', name: 'Daily depth (mm)', ...axisStyle(palette) },
     series: POPS.map((k) => ({
       name: POP_LABEL[k], type: 'line', symbolSize: 8, lineStyle: { width: 2 },
       itemStyle: { color: palette[POP_SLOT[k]], borderColor: palette.surface, borderWidth: 2 },
       data: r.growth_curves_mm[k].map((g) => g.median),
     })),
   }
-
-  // ---- pilot basin: depths per population and the model forcing
-  const pilotDepth: EChartsOption = {
-    grid: { left: 52, right: 16, top: 12, bottom: 44 },
-    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, valueFormatter: (v) => `${fmt(Number(v))} mm` },
-    xAxis: { type: 'category', data: pilotData.depth_24h.total.map((d) => String(d.rp)), name: 'Return period (years)',
-             nameLocation: 'middle', nameGap: 28, ...axisStyle(palette) },
-    yAxis: { type: 'value', name: '24 h depth (mm)', ...axisStyle(palette) },
-    series: POPS.map((k) => ({
-      name: POP_LABEL[k], type: 'bar', barGap: '10%', barCategoryGap: '30%',
-      itemStyle: { color: palette[POP_SLOT[k]], borderRadius: [4, 4, 0, 0] },
-      data: pilotData.depth_24h[k].map((d) => d.mm),
-    })),
-  }
-  const step = pilotData.hyetograph_rp100.step_h
-  const hyeto: EChartsOption = {
-    grid: { left: 52, right: 16, top: 12, bottom: 44 },
-    tooltip: {
-      trigger: 'axis', axisPointer: { type: 'shadow' },
-      formatter: (ps) => {
-        const i = (ps as { dataIndex: number }[])[0].dataIndex
-        return `${fmt(i * step, 1)}–${fmt((i + 1) * step, 1)} h<br/><b>${fmt(pilotData.hyetograph_rp100.intensity_mm_hr[i], 1)} mm/h</b>`
-      },
-    },
-    xAxis: { type: 'category', data: pilotData.hyetograph_rp100.intensity_mm_hr.map((_, i) => fmt(i * step, 1)),
-             name: 'Time (h)', nameLocation: 'middle', nameGap: 28, ...axisStyle(palette),
-             axisLabel: { color: palette['text-secondary'], interval: 7 } },
-    yAxis: { type: 'value', name: 'Intensity (mm/h)', ...axisStyle(palette) },
-    series: [{ type: 'bar', barCategoryGap: '12%', data: pilotData.hyetograph_rp100.intensity_mm_hr,
-               itemStyle: { color: palette[POP_SLOT.total], borderRadius: [3, 3, 0, 0] } }],
-  }
-  const total100 = pilotData.depth_24h[r.design_population].find((d) => d.rp === 100)!.mm
-  const peak = Math.max(...pilotData.hyetograph_rp100.intensity_mm_hr)
 
   const onMove = (e: MapLayerMouseEvent) => {
     const f = e.features?.[0]
@@ -147,16 +113,16 @@ export function Rainfall({ rainfall: r, cyclones, tracks, catchments, palette, d
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Rainfall record" value={`${r.record.years} years`} sub={`GPM IMERG daily, ${r.record.start.slice(0, 4)}–${r.record.end.slice(0, 4)}, ${r.record.grid_deg}°`} />
-        <Stat label="Cyclones in the catalogue" value={`${cyclones.n_matched} / ${cyclones.n_catalogue}`} sub="matched to IBTrACS best tracks" />
+        <Stat label="Cyclones in the catalogue" value={cyclones.storms.length} sub={`landfall or within ${cyclones.max_coast_km} km of the coast`} />
         <Stat label="Cyclone share of rainfall" value={`${fmt(r.tc_share_pct.land_mean, 1)}%`} sub={`up to ${fmt(r.tc_share_pct.max_cell, 1)}% locally`} />
         <Stat label="Cyclone-flagged cell-days" value={`${fmt(r.flagged_cell_days_pct, 2)}%`} sub={`within ${r.radius_km} km of a storm centre`} />
       </div>
 
       <Card title="Splitting the rainfall record into cyclone and non-cyclone rainfall">
         <Steps items={[
-          { title: 'Catalogue', body: <>{cyclones.n_catalogue} storms that made landfall on, or passed close to, Madagascar, with their date of passage. The 2000–2022 storms are those that caused damage in Madagascar; those of 1998–1999 and July 2022 – September 2025 were added with an explicit rule: every IBTrACS storm that made landfall or passed within 300 km of the coast (the farthest pass in the 2000–2022 list is 288 km), matched by its IBTrACS id.</> },
-          { title: 'Best tracks', body: <>Each storm is matched to <b>IBTrACS v04r01</b> (South Indian basin, NOAA NCEI): a geographic screen (a fix within 8° of the island), the name (tested against each part of combined names such as <i>Eline:Leone</i>) and the date of passage to pick between storms that share a name. {cyclones.unmatched.length > 0 && <>One entry has no name and no storm within ±5 days ({cyclones.unmatched.map((u) => u.name).join(', ')}); it is reported, not substituted.</>}</> },
-          { title: 'Attribution', body: <>A GPM cell-day is <b>cyclone rainfall</b> when any 6-hourly fix of a matched storm on that day lies within <b>{r.radius_km} km</b> of the cell centre. The radius is generous next to a typical radius of maximum wind (~50 km), to catch the outer rainbands. It is the main tunable assumption: a wider radius raises the cyclone share.</> },
+          { title: 'Catalogue', body: <>One rule over the whole record: every <b>IBTrACS v04r01</b> storm (South Indian basin, NOAA NCEI) that made landfall on Madagascar or passed within <b>{cyclones.max_coast_km} km</b> of its coast, whatever its intensity: {cyclones.storms.length} storms, of which {cyclones.n_below_ts} never reached tropical-storm strength (34 kn). Weak systems are kept because rain does not scale with wind: ORSTOM notes heavy rain from tropical depressions too.</> },
+          { title: 'Check against the damage list', body: <>The {cyclones.damage_check.n_list} storms that caused damage in Madagascar in 2000–2022 are matched to IBTrACS by name and date of passage: {cyclones.damage_check.n_matched} are found, and all {cyclones.damage_check.n_in_rule} are in the rule set (the farthest passed 288 km from the coast). {cyclones.damage_check.unmatched.length > 0 && <>{cyclones.damage_check.unmatched.map((u) => u.name).join(', ')} has no name and no storm within ±5 days; it is reported, not substituted. </>}The rule adds the weaker or offshore storms without reported damage, whose rain would otherwise count as non-cyclone rain.</> },
+          { title: 'Attribution', body: <>A GPM cell-day is <b>cyclone rainfall</b> when any 6-hourly fix of a matched storm on that day lies within <b>{r.radius_km} km</b> of the cell centre. The radius is generous next to a typical radius of maximum wind (~50 km), to catch the outer rainbands. It is the main tunable assumption; a check with 300 km is shown in the validation card below.</> },
           { title: 'Three populations', body: <><b>Tropical-cyclone</b> rainfall (flagged cell-days), <b>non-TC</b> rainfall (all other cell-days) and <b>total</b> rainfall (the unmodified record). TC and non-TC are complementary: together they reproduce the record exactly.</> },
         ]} />
       </Card>
@@ -228,10 +194,10 @@ export function Rainfall({ rainfall: r, cyclones, tracks, catchments, palette, d
         </div>
       </Card>
 
-      <Card title="Design rainfall depth per population" subtitle="24-hour depth by return period: median over land cells (lines), and the 100-year depth (maps, shared colour scale).">
+      <Card title="Design rainfall depth per population" subtitle="Daily (calendar-day) depth by return period: median over land cells (lines), and the 100-year depth (maps, shared colour scale).">
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]">
           <div>
-            <Chart option={growth} height={320} label="24-hour design depth by return period for each rainfall population" />
+            <Chart option={growth} height={320} label="Daily design depth by return period for each rainfall population" />
             <Legend palette={palette} items={POPS.map((k) => ({ label: POP_LABEL[k], role: POP_SLOT[k], line: true }))} />
             <DataTable caption="Design depths, land median and 10–90% range" head={['Return period', 'Total (mm)', 'TC (mm)', 'Non-TC (mm)']}
               rows={r.growth_curves_mm.total.map((g, i) => [
@@ -256,35 +222,11 @@ export function Rainfall({ rainfall: r, cyclones, tracks, catchments, palette, d
             </Info>
           </div>
           <Figure src={dataUrl('figures/design_depth_rp100_by_population.png')}
-            alt="Maps of the 100-year 24-hour rainfall depth for total, cyclone and non-cyclone rainfall" />
+            alt="Maps of the 100-year daily rainfall depth for total, cyclone and non-cyclone rainfall" />
         </div>
       </Card>
 
-      <Card
-        title="Design storm for a pilot basin"
-        subtitle="The basin depth is the median of the GPM cells it touches. The 24-hour depth is spread into 30-minute blocks with the alternating-block method."
-        actions={<Segmented label="Pilot basin" value={pilot} onChange={setPilot}
-          options={r.pilots.map((p) => ({ value: p.basin_id, label: p.basin_id }))} />}
-      >
-        <div className="grid gap-4 lg:grid-cols-2">
-          <div>
-            <h3 className="text-sm font-semibold text-ink">24-hour depth by population ({pilotData.gpm_cells} GPM cells)</h3>
-            <Chart option={pilotDepth} height={300} label="Basin design depth by return period and population" />
-            <Legend palette={palette} items={POPS.map((k) => ({ label: POP_LABEL[k], role: POP_SLOT[k] }))} />
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold text-ink">100-year hyetograph, {POP_LABEL[r.design_population].toLowerCase()} rainfall ({fmt(total100)} mm, peak {fmt(peak)} mm/h)</h3>
-            <Chart option={hyeto} height={300} label="100-year design hyetograph in 30-minute blocks" />
-          </div>
-        </div>
-        <Info>
-          Depth-duration law P(t) = P<sub>24h</sub>·(t/24)<sup>n</sup> with n = {fmt(r.dd_exponent, 2)}. With only daily
-          data, <b>n is uncalibrated</b>: it sets the peak intensity, and so the peak flood depth. It will be calibrated
-          on IMERG half-hourly data before the design events are run. The models are currently set up with the
-          {POP_LABEL[r.design_population].toLowerCase()} rainfall; which population drives the hazard maps is still
-          open, and switching is one setting.
-        </Info>
-      </Card>
+      <DesignRainfall palette={palette} />
       <CatchmentRainfall catchments={catchments} palette={palette} dark={dark} initial={r.pilots[0].basin_id} />
     </div>
   )

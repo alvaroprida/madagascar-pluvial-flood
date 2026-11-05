@@ -4,7 +4,8 @@ import type { EChartsOption } from 'echarts'
 import { dataUrl } from '../data'
 import { fmt } from '../format'
 import { POP_LABEL, POP_SLOT, type Palette } from '../theme'
-import type { FeatureCollection, PopKey } from '../types'
+import { lawDepth, nontcStorm, tcStorm } from '../designStorms'
+import type { DesignStorms, FeatureCollection, PopKey } from '../types'
 import { Card, Chart, Info, Segmented, Stat } from './ui'
 
 const BASEMAP = {
@@ -14,17 +15,18 @@ const BASEMAP = {
 const POPS: PopKey[] = ['total', 'tc', 'nontc']
 const EULER = 0.5772
 
+type FitDur = '24' | '48' | '72' | '96'
 export interface Fit { p0: number | null; mu: number | null; beta: number | null; ppcc: number | null; ks: number | null
   maxima: (number | null)[]; depth: (number | null)[]; ci90: (number | null)[] }
 export interface CatchmentDoc {
   basin_id: string; area_km2: number; level: number; gpm_cells: number
-  populations: Record<PopKey, { fits: Record<'24' | '48', Fit>; ddf: (number | null)[][] }>
-  total_direct: Record<'24' | '48', (number | null)[]>
+  populations: Record<PopKey, { fits: Record<FitDur, Fit>; ddf: (number | null)[][] }>
+  total_direct: Record<FitDur, (number | null)[]>
   cell_median_total_24h: Record<string, number | null>
 }
 export interface Summary {
   seasons: string[]; return_periods: number[]; durations: number[]; fit_durations: number[]
-  dd_exponent: number; n_seasons: number; tc_majority: number
+  dd_exponent: number; dd_coefficient: number; n_seasons: number; tc_majority: number
   fit_quality: { ppcc_critical: Record<'0.05' | '0.01', number>; share_below: Record<PopKey, Record<'0.05' | '0.01', number>>; catchments_any_below_1pct: number }
   catchments: { id: string; area: number; ppcc: Record<PopKey, number | null>; ppcc_min: number; d100: number; tc_share100: number; arf100: number | null }[]
 }
@@ -48,29 +50,6 @@ function ciHalf(F: number, f: Fit): number | null {
   const n = f.maxima.filter((v) => v != null && v > 0).length
   return (1.645 * Math.sqrt(1 + 1.1396 * K + 1.1 * K * K) * sd) / Math.sqrt(Math.max(n, 1))
 }
-/** Depth at duration t (h) by log-log interpolation of the DDF points. */
-function ddfAt(t: number, durations: number[], depths: number[], exponent: number): number {
-  if (t <= durations[0]) return depths[durations.indexOf(24)] * (t / 24) ** exponent
-  for (let i = 0; i < durations.length - 1; i++) {
-    const [a, b] = [durations[i], durations[i + 1]]
-    if (t <= b) {
-      const w = Math.log(t / a) / Math.log(b / a)
-      return Math.exp(Math.log(Math.max(depths[i], 1e-6)) * (1 - w) + Math.log(Math.max(depths[i + 1], 1e-6)) * w)
-    }
-  }
-  return depths[depths.length - 1]
-}
-/** Alternating-block hyetograph: intensities (mm/h) of blocks of dt hours over D hours. */
-function hyetograph(D: number, dt: number, depthAt: (t: number) => number): number[] {
-  const n = Math.round(D / dt)
-  const cum = Array.from({ length: n }, (_, i) => depthAt((i + 1) * dt))
-  const inc = cum.map((c, i) => c - (i ? cum[i - 1] : 0)).sort((a, b) => b - a)
-  const out = new Array(n).fill(0)
-  let right = Math.floor(n / 2), left = right - 1
-  inc.forEach((v, i) => { if (i % 2 === 0) out[right++] = v; else out[left--] = v })
-  return out.map((v) => v / dt)
-}
-
 // ---------------------------------------------------------------- component
 export function CatchmentRainfall({ catchments, palette, dark, initial }: {
   catchments: FeatureCollection; palette: Palette; dark: boolean; initial: string
@@ -83,12 +62,15 @@ export function CatchmentRainfall({ catchments, palette, dark, initial }: {
   const [ddfMode, setDdfMode] = useState<'dur' | 'pop'>('dur')
   const [ddfDur, setDdfDur] = useState(24)
   const [rp, setRp] = useState(100)
-  const [stormH, setStormH] = useState(24)
-  const [fitDur, setFitDur] = useState<'24' | '48'>('24')
+  const [nontcH, setNontcH] = useState(3)
+  const [tcH, setTcH] = useState(72)
+  const [fitDur, setFitDur] = useState<FitDur>('24')
+  const [design, setDesign] = useState<DesignStorms>()
   const [query, setQuery] = useState('')
 
   useEffect(() => {
     fetch(dataUrl('catchment_rainfall_summary.json')).then((r) => r.json()).then(setSummary)
+    fetch(dataUrl('design_storms.json')).then((r) => r.json()).then(setDesign)
   }, [])
   useEffect(() => {
     setDoc(undefined)
@@ -127,9 +109,12 @@ export function CatchmentRainfall({ catchments, palette, dark, initial }: {
   const legend = { top: 0, type: 'scroll' as const, textStyle: { color: palette['text-secondary'] }, itemWidth: 14, itemHeight: 10 }
   // ordinal: short durations light, long durations dark
   const durShades = durs.map((_, i) => 0.3 + (0.7 * i) / (durs.length - 1))
-  const fitted = (d: number) => summary.fit_durations.includes(d)
+  // 1-24 h follow the depth-duration law from the daily depth; 48-96 h are fitted on running sums
+  const fitted = (d: number) => d > 24
+  const law = { coefficient: summary.dd_coefficient, exponent: summary.dd_exponent }
 
-  let ddfChart: EChartsOption = {}, hyetoChart: EChartsOption = {}, fitChart: EChartsOption = {}
+  let ddfChart: EChartsOption = {}, fitChart: EChartsOption = {}
+  let stormCharts: { title: string; option: EChartsOption }[] = []
   if (doc) {
     const curve = (pop: PopKey, j: number) => rps.map((T, i) => [T, doc.populations[pop].ddf[i][j]])
     ddfChart = {
@@ -158,20 +143,27 @@ export function CatchmentRainfall({ catchments, palette, dark, initial }: {
         label: { color: palette['text-muted'], position: 'insideTop', formatter: `extrapolated beyond the ${summary.n_seasons}-season record` },
         data: [[{ xAxis: 100 }, { xAxis: rps[rps.length - 1] }]] } } : ser)),
     } as EChartsOption
-    const dt = stormH <= 3 ? 1 / 6 : 0.5
-    hyetoChart = {
-      legend, grid: { left: 56, right: 24, top: 40, bottom: 44 },
+    const k = rps.indexOf(rp)
+    const pj = (p: PopKey) => doc.populations[p].fits['24'].depth[k] ?? 0
+    const stormChart = (p: 'nontc' | 'tc', D: number, intens: number[], dt: number): EChartsOption => ({
+      grid: { left: 56, right: 16, top: 16, bottom: 44 },
       tooltip: { trigger: 'axis', valueFormatter: (v) => `${fmt(Number(v), 1)} mm/h` },
-      xAxis: { type: 'value', min: 0, max: stormH, name: 'Time (h)', nameLocation: 'middle', nameGap: 28, ...axis },
+      xAxis: { type: 'value', min: 0, max: D, interval: D > 24 ? 24 : D > 3 ? 1 : 0.5, name: 'Time (h)', nameLocation: 'middle', nameGap: 28, ...axis },
       yAxis: { type: 'value', name: 'Intensity (mm/h)', ...axis },
-      series: POPS.map((p) => {
-        const depths = doc.populations[p].ddf[rps.indexOf(rp)].map((v) => v ?? 0)
-        const h = hyetograph(stormH, dt, (t) => ddfAt(t, durs, depths, summary.dd_exponent))
-        const data = h.flatMap((v, i) => [[i * dt, v], [(i + 1) * dt, v]])
-        return { name: `${POP_LABEL[p]} (${fmt(depths[durs.indexOf(stormH)] ?? 0)} mm)`, type: 'line' as const, data, symbol: 'none',
-          lineStyle: { width: 2 }, itemStyle: { color: palette[POP_SLOT[p]] }, areaStyle: { opacity: 0.08 } }
-      }),
-    }
+      series: [{ name: POP_LABEL[p], type: 'line', symbol: 'none', lineStyle: { width: 2 }, itemStyle: { color: palette[POP_SLOT[p]] },
+        areaStyle: { opacity: 0.1 }, data: intens.flatMap((v, i) => [[i * dt, v], [(i + 1) * dt, v]]) }],
+    })
+    const nontc = nontcStorm(pj('nontc'), law, nontcH)
+    const nDays = tcH / 24
+    const tcTotal = nDays === 1 ? lawDepth(24, pj('tc'), law) : (doc.populations.tc.ddf[k][durs.indexOf(tcH)] ?? 0)
+    const tc = design ? tcStorm(tcTotal, nDays === 1 ? [1] : design.tc_day_shares.shares[`${nDays}d` as '2d' | '3d' | '4d'].median, law) : []
+    const sumOf = (x: number[], dt: number) => x.reduce((a, b) => a + b, 0) * dt
+    stormCharts = [
+      { title: `Non-TC thunderstorm, ${nontcH} h: ${fmt(sumOf(nontc, 1 / 6))} mm, peak ${fmt(Math.max(...nontc))} mm/h (10-min blocks)`,
+        option: stormChart('nontc', nontcH, nontc, 1 / 6) },
+      { title: `Cyclone storm, ${tcH} h: ${fmt(sumOf(tc, 0.5))} mm, peak ${fmt(Math.max(0, ...tc))} mm/h (30-min blocks)`,
+        option: stormChart('tc', tcH, tc, 0.5) },
+    ]
     const Fs = Array.from({ length: 90 }, (_, i) => 0.02 + (0.9992 - 0.02) * (i / 89))
     const n = summary.n_seasons
     fitChart = {
@@ -276,10 +268,10 @@ export function CatchmentRainfall({ catchments, palette, dark, initial }: {
         <div className="min-w-0 space-y-4">
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <Stat label="Catchment" value={id} sub={doc ? `${fmt(doc.area_km2)} km² · level ${doc.level} · ${doc.gpm_cells} GPM cells` : '…'} />
-            <Stat label="100-yr 24 h depth, total" value={s ? `${fmt(s.d100)} mm` : '…'}
+            <Stat label="100-yr daily depth, total" value={s ? `${fmt(s.d100)} mm` : '…'}
               sub={doc ? `TC ${fmt(doc.populations.tc.fits['24'].depth[rps.indexOf(100)] ?? 0)} mm · non-TC ${fmt(doc.populations.nontc.fits['24'].depth[rps.indexOf(100)] ?? 0)} mm` : ''} />
             <Stat label="Areal reduction" value={s?.arf100 != null ? fmt(s.arf100, 2) : '–'} sub="catchment ÷ single-cell 100-yr depth" />
-            <Stat label="Fit quality (PPCC)" value={s ? fmt(s.ppcc_min, 3) : '…'} sub="lowest of the 3 populations, 24 h" />
+            <Stat label="Fit quality (PPCC)" value={s ? fmt(s.ppcc_min, 3) : '…'} sub="lowest of the 3 populations, daily" />
           </div>
           {!doc ? <p className="text-sm text-ink-3">Loading catchment…</p> : (
             <>
@@ -294,22 +286,31 @@ export function CatchmentRainfall({ catchments, palette, dark, initial }: {
                   </div>
                 </div>
                 <Chart option={ddfChart} height={340} label="Depth-duration-frequency curves: depth against return period, one line per duration" />
-                <p className="mt-1 text-xs text-ink-3">Solid: durations fitted from the data (24 h, 48 h). Dashed: derived from the 24 h depth.</p>
+                <p className="mt-1 text-xs text-ink-3">Solid: fitted on 2–4 day running sums (48–96 h). Dashed: 1–24 h from the daily depth with the depth-duration law ({fmt(law.coefficient, 3)} · t<sup>{fmt(law.exponent, 1)}</sup> · daily depth).</p>
               </section>
               <section>
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h3 className="text-sm font-semibold text-ink">Design hyetograph ({rp}-year, {stormH} h)</h3>
+                  <h3 className="text-sm font-semibold text-ink">Design storms ({rp}-year)</h3>
                   <div className="flex flex-wrap gap-2">
                     <Segmented label="Return period" value={String(rp)} onChange={(v) => setRp(Number(v))} options={rps.map((T) => ({ value: String(T), label: `${T}` }))} />
-                    <Segmented label="Storm duration" value={String(stormH)} onChange={(v) => setStormH(Number(v))} options={durs.map((d) => ({ value: String(d), label: `${d} h` }))} />
+                    <Segmented label="Non-TC duration" value={String(nontcH)} onChange={(v) => setNontcH(Number(v))} options={[1, 3, 6].map((d) => ({ value: String(d), label: `${d} h` }))} />
+                    <Segmented label="Cyclone duration" value={String(tcH)} onChange={(v) => setTcH(Number(v))} options={[24, 48, 72, 96].map((d) => ({ value: String(d), label: `${d} h` }))} />
                   </div>
                 </div>
-                <Chart option={hyetoChart} height={280} label="Design hyetograph per population" />
+                <div className="mt-2 grid gap-3 lg:grid-cols-2">
+                  {stormCharts.map((c) => (
+                    <div key={c.title}>
+                      <p className="text-xs text-ink-2">{c.title}</p>
+                      <Chart option={c.option} height={240} label={c.title} />
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-1 text-xs text-ink-3">Design durations: 3 h (non-TC) and 72 h (cyclone); the others are the validation durations. Shapes are explained in the design storm section above.</p>
               </section>
               <section>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h3 className="text-sm font-semibold text-ink">Gumbel fit check</h3>
-                  <Segmented label="Fitted duration" value={fitDur} onChange={setFitDur} options={[{ value: '24', label: '24 h' }, { value: '48', label: '48 h' }]} />
+                  <Segmented label="Fitted duration" value={fitDur} onChange={setFitDur} options={(['24', '48', '72', '96'] as FitDur[]).map((d) => ({ value: d, label: d === '24' ? 'daily' : `${Number(d) / 24} days` }))} />
                 </div>
                 <Chart option={fitChart} height={340} label="Observed seasonal maxima against the fitted Gumbel distribution" />
                 <table className="mt-2 w-full text-sm tabular">
@@ -357,10 +358,11 @@ export function CatchmentRainfall({ catchments, palette, dark, initial }: {
         {pctOf('total', '0.01')}. The excess comes mostly from single outlier seasons that inflate the method-of-moments fit;{' '}
         {fmt(summary.fit_quality.catchments_any_below_1pct)} catchments ({fmt((100 * summary.fit_quality.catchments_any_below_1pct) / summary.catchments.length, 1)}%)
         have at least one population below {fmt(crit['0.01'], 3)}. With {summary.n_seasons} seasons, depths beyond about 100
-        years are extrapolations, and 1–12 h depths are derived from the 24 h depth with the uncalibrated exponent
-        n = {fmt(summary.dd_exponent, 2)}. A catchment-day counts as cyclone rain when at least {fmt(summary.tc_majority * 100, 0)}% of the
-        catchment's area is attributed to a storm. GPM daily totals use fixed calendar days, which tends to underestimate true
-        24-hour maxima; no correction is applied yet.
+        years are extrapolations. 1–24 h depths follow P(t) = {fmt(law.coefficient, 3)} · t<sup>{fmt(law.exponent, 1)}</sup> · PJ from the
+        daily depth PJ (a local Antananarivo drainage study); at 24 h this gives 1.19 PJ, which includes the correction from fixed
+        calendar days to any 24 hours. 2–4 day depths are fitted on running sums of daily totals, without correction. A
+        catchment-day counts as cyclone rain when at least {fmt(summary.tc_majority * 100, 0)}% of the catchment's area is attributed
+        to a storm.
       </Info>
     </Card>
   )

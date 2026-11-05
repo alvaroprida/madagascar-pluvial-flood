@@ -7,7 +7,7 @@ import { Card, Figure, Info, Stat } from './ui'
 const STAGES: { key: TabKey; step: string; title: string; body: string; status: string }[] = [
   { key: 'domain', step: '0', title: 'Domain', body: 'Catchments as independent model domains, or any polygons of interest.', status: 'Done' },
   { key: 'inputs', step: '1', title: 'Inputs', body: 'Topography, land cover, curve number and soils, fetched on the fly per basin.', status: 'Done' },
-  { key: 'rainfall', step: '1', title: 'Design rainfall', body: 'Cyclone, non-cyclone and total rainfall; design depths and hyetographs.', status: 'Done' },
+  { key: 'rainfall', step: '1', title: 'Design rainfall', body: 'Cyclone, non-cyclone and total rainfall; design depths; storm shapes and durations per storm type (durations being validated).', status: 'Done' },
   { key: 'setup', step: '2', title: 'Model setup', body: 'SFINCS rain-on-grid model per basin with HydroMT.', status: 'Done' },
   { key: 'setup', step: '3–4', title: 'Run & post-process', body: 'SFINCS in a container; flood depth maps and summaries.', status: 'Tested, runs pending' },
 ]
@@ -18,7 +18,7 @@ export function Overview({ data, go }: { data: SiteData; go: (k: TabKey) => void
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat hero label="Catchments" value={domain.n_basins} sub="independent SFINCS models" />
-        <Stat hero label="Cyclones" value={cyclones.n_matched} sub={`matched best tracks, 1998–2025`} />
+        <Stat hero label="Cyclones" value={cyclones.storms.length} sub={`landfall or within ${cyclones.max_coast_km} km of the coast, 1998–2025`} />
         <Stat hero label="Cyclone share" value={`${fmt(rainfall.tc_share_pct.land_mean, 1)}%`} sub="of annual rainfall over land" />
         <Stat hero label="Pilot basins" value={domain.pilots.length} sub={domain.pilots.map((p) => `${Math.round(p.area_km2)} km²`).join(' and ')} />
       </div>

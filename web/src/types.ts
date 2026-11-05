@@ -46,13 +46,16 @@ export interface Storm {
   vmax_kmh: number
   category: string
   cat: number
+  coast_km: number
+  in_damage_list: boolean
 }
 
 export interface Cyclones {
   storms: Storm[]
-  unmatched: { name: string; note: string }[]
-  n_catalogue: number
-  n_matched: number
+  max_coast_km: number
+  farthest_pass_km: number
+  damage_check: { n_list: number; n_matched: number; n_in_rule: number; unmatched: { name: string; note: string }[] }
+  n_below_ts: number
   categories: string[]
 }
 
@@ -71,9 +74,53 @@ export interface Rainfall {
     basin_id: string
     gpm_cells: number
     depth_24h: Record<PopKey, { rp: number; mm: number }[]>
-    hyetograph_rp100: { step_h: number; intensity_mm_hr: number[] }
   }[]
-  dd_exponent: number
+  dd_law: { coefficient: number; exponent: number }
+}
+
+export interface DesignStorm {
+  population: 'nontc' | 'tc'
+  duration_h: number
+  rp: number
+  step_h: number
+  depth_mm: number
+  peak_mm_hr: number
+  intensity_mm_hr: number[]
+  wettest_day_over_24h?: number
+}
+
+type Spread = { min: number; median: number; max: number }
+
+export interface DesignStorms {
+  law: { coefficient: number; exponent: number; ratios: { t_h: number; p_over_pj: number }[] }
+  config: {
+    nontc: { duration_h: number; intense_h: number; centre_frac: number; step_min: number; gcn250_arc: string }
+    tc: { duration_h: number; step_min: number; gcn250_arc: string }
+    report_peak_mm_hr: number
+  }
+  tc_day_shares: {
+    method: string
+    shares: Record<'2d' | '3d' | '4d', { median: number[]; p25: number[]; p75: number[]; n_events: number }>
+    event_length_days: { median: number; p75: number; p90: number; share_by_days: Record<string, number> }
+  }
+  radius_check: {
+    radius_adopted_km: number
+    radius_tested_km: number
+    tc_share_of_rainfall_island_mean: Record<string, number>
+    depth_ratio_tested_over_adopted: Record<string, { p05: number; median: number; p95: number; share_within_5pct: number }>
+    outer_band_check: {
+      catchments_nontc_rp100_up_more_than_10pct: number
+      n_catchments: number
+      top3_nontc_maxima_on_tc_days_at_adopted_radius: { those_catchments: number; other_catchments: number }
+    }
+  } | null
+  validation_durations: Record<'nontc' | 'tc', number[]>
+  catchments: { basin_id: string; slot: string; area_km2: number; daily_depth_mm: Record<'nontc' | 'tc', Record<string, number>>; storms: DesignStorm[] }[]
+  nested_test: {
+    rows: ({ duration_h: number; rp: number } & Record<'flooded_km2_vs_24h' | 'volume_m3_vs_24h' | 'building_loss_usd_vs_24h', Spread>)[]
+    n_catchments: number
+    max_share_deeper_than_24h_pct: number
+  } | null
 }
 
 export interface LandcoverClass {
