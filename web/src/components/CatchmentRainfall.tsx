@@ -62,7 +62,6 @@ export function CatchmentRainfall({ catchments, palette, dark, initial }: {
   const [ddfMode, setDdfMode] = useState<'dur' | 'pop'>('dur')
   const [ddfDur, setDdfDur] = useState(24)
   const [rp, setRp] = useState(100)
-  const [nontcH, setNontcH] = useState(3)
   const [tcH, setTcH] = useState(72)
   const [fitDur, setFitDur] = useState<FitDur>('24')
   const [design, setDesign] = useState<DesignStorms>()
@@ -148,19 +147,19 @@ export function CatchmentRainfall({ catchments, palette, dark, initial }: {
     const stormChart = (p: 'nontc' | 'tc', D: number, intens: number[], dt: number): EChartsOption => ({
       grid: { left: 56, right: 16, top: 16, bottom: 44 },
       tooltip: { trigger: 'axis', valueFormatter: (v) => `${fmt(Number(v), 1)} mm/h` },
-      xAxis: { type: 'value', min: 0, max: D, interval: D > 24 ? 24 : D > 3 ? 1 : 0.5, name: 'Time (h)', nameLocation: 'middle', nameGap: 28, ...axis },
+      xAxis: { type: 'value', min: 0, max: D, interval: D > 24 ? 24 : D > 6 ? 2 : D > 3 ? 1 : 0.5, name: 'Time (h)', nameLocation: 'middle', nameGap: 28, ...axis },
       yAxis: { type: 'value', name: 'Intensity (mm/h)', ...axis },
       series: [{ name: POP_LABEL[p], type: 'line', symbol: 'none', lineStyle: { width: 2 }, itemStyle: { color: palette[POP_SLOT[p]] },
         areaStyle: { opacity: 0.1 }, data: intens.flatMap((v, i) => [[i * dt, v], [(i + 1) * dt, v]]) }],
     })
-    const nontc = nontcStorm(pj('nontc'), law, nontcH)
+    const nontc = nontcStorm(pj('nontc'), law)
     const nDays = tcH / 24
     const tcTotal = nDays === 1 ? lawDepth(24, pj('tc'), law) : (doc.populations.tc.ddf[k][durs.indexOf(tcH)] ?? 0)
     const tc = design ? tcStorm(tcTotal, nDays === 1 ? [1] : design.tc_day_shares.shares[`${nDays}d` as '2d' | '3d' | '4d'].median, law) : []
     const sumOf = (x: number[], dt: number) => x.reduce((a, b) => a + b, 0) * dt
     stormCharts = [
-      { title: `Non-TC thunderstorm, ${nontcH} h: ${fmt(sumOf(nontc, 1 / 6))} mm, peak ${fmt(Math.max(...nontc))} mm/h (10-min blocks)`,
-        option: stormChart('nontc', nontcH, nontc, 1 / 6) },
+      { title: `Non-TC thunderstorm, 12 h: ${fmt(sumOf(nontc, 1 / 6))} mm, peak ${fmt(Math.max(...nontc))} mm/h (10-min blocks)`,
+        option: stormChart('nontc', 12, nontc, 1 / 6) },
       { title: `Cyclone storm, ${tcH} h: ${fmt(sumOf(tc, 0.5))} mm, peak ${fmt(Math.max(0, ...tc))} mm/h (30-min blocks)`,
         option: stormChart('tc', tcH, tc, 0.5) },
     ]
@@ -293,7 +292,6 @@ export function CatchmentRainfall({ catchments, palette, dark, initial }: {
                   <h3 className="text-sm font-semibold text-ink">Design storms ({rp}-year)</h3>
                   <div className="flex flex-wrap gap-2">
                     <Segmented label="Return period" value={String(rp)} onChange={(v) => setRp(Number(v))} options={rps.map((T) => ({ value: String(T), label: `${T}` }))} />
-                    <Segmented label="Non-TC duration" value={String(nontcH)} onChange={(v) => setNontcH(Number(v))} options={[1, 3, 6].map((d) => ({ value: String(d), label: `${d} h` }))} />
                     <Segmented label="Cyclone duration" value={String(tcH)} onChange={(v) => setTcH(Number(v))} options={[24, 48, 72, 96].map((d) => ({ value: String(d), label: `${d} h` }))} />
                   </div>
                 </div>
@@ -305,7 +303,7 @@ export function CatchmentRainfall({ catchments, palette, dark, initial }: {
                     </div>
                   ))}
                 </div>
-                <p className="mt-1 text-xs text-ink-3">Design durations: 3 h (non-TC) and 72 h (cyclone); the others are the validation durations. Shapes are explained in the design storm section above.</p>
+                <p className="mt-1 text-xs text-ink-3">Design durations: 12 h (non-TC, set by half-hourly GPM) and 72 h (cyclone); the other cyclone durations are for comparison. Shapes are explained in the design storm section above.</p>
               </section>
               <section>
                 <div className="flex flex-wrap items-center justify-between gap-2">

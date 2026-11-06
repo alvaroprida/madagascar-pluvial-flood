@@ -65,7 +65,7 @@ export function DesignRainfall({ palette }: { palette: Palette }) {
     return {
       grid: { left: 56, right: 16, top: 16, bottom: 44 },
       tooltip: { trigger: 'axis', valueFormatter: (v) => `${fmt(Number(v), 1)} mm/h` },
-      xAxis: { type: 'value', min: 0, max: D, interval: D > 24 ? 12 : 0.5, name: 'Time (h)', nameLocation: 'middle',
+      xAxis: { type: 'value', min: 0, max: D, interval: D > 24 ? 12 : D > 6 ? 2 : 0.5, name: 'Time (h)', nameLocation: 'middle',
                nameGap: 28, ...axisStyle(palette) },
       yAxis: { type: 'value', name: 'Intensity (mm/h)', ...axisStyle(palette) },
       series: [
@@ -96,6 +96,9 @@ export function DesignRainfall({ palette }: { palette: Palette }) {
   const nested = d.nested_test
   const nestedRow = (D: number, T: number) => nested?.rows.find((r) => r.duration_h === D && r.rp === T)
   const pct = (v: number) => `${fmt(v * 100, 0)}%`
+  const dc = d.nontc_duration_check
+  const ratio = (t: number) => dc!.ratios.find((r) => r.t_h === t)!
+  const pilot = d.nontc_pilot ?? []
 
   return (
     <div className="space-y-4">
@@ -105,10 +108,11 @@ export function DesignRainfall({ palette }: { palette: Palette }) {
           { title: 'Sub-daily depths', body: <>A local depth-duration law turns the daily depth into depths for any duration of up to 24 hours.</> },
           { title: 'A first duration test, and its lesson', body: <>Nested storms (one shape containing every shorter duration) were run for 1–48 h. They cannot identify a critical duration: the flood can only grow with duration by construction.</> },
           { title: 'Two storm types', body: <>The ORSTOM rainfall study of Madagascar separates short, intense thunderstorms from long, moderate cyclone rain. Each type gets its own storm shape, duration and soil moisture.</> },
-          { title: 'Design durations', body: <>3 hours for non-cyclone storms, 72 hours for cyclone storms, from the report and from the cyclone events in the GPM record.</> },
-          { title: 'Storm shapes and soil moisture', body: <>A front-loaded double triangle for thunderstorms; a 3-day storm with one shaped wettest day for cyclones, on wet soils.</> },
+          { title: 'Pilot flood runs, and their lesson', body: <>Non-cyclone storms of 1, 3 and 6 h on the urban Antananarivo catchment: the longest storm floods most, whatever its shape. Floods follow rain volume, so the duration has to come from how long real storms last, not from the flood model.</> },
+          { title: 'How long heavy non-cyclone rain lasts', body: <>Half-hourly GPM on the heaviest non-cyclone days: a 3-hour core that matches the law, inside an event that delivers the whole day within about 12 hours.</> },
+          { title: 'Design durations', body: <>12 hours for non-cyclone storms (half-hourly GPM), 72 hours for cyclone storms (cyclone events in the daily GPM record and the report).</> },
+          { title: 'Storm shapes and soil moisture', body: <>A 12-hour double triangle holding the daily depth for thunderstorms; a 3-day storm with one shaped wettest day for cyclones, on wet soils.</> },
           { title: 'Intensity checks', body: <>Peak intensities compared with the intensities recorded in Madagascar.</> },
-          { title: 'Validation runs', body: <>Flood runs over a range of durations confirm (or correct) the design durations before the national runs. <b>Planned.</b></> },
         ]} />
       </Card>
 
@@ -133,8 +137,8 @@ export function DesignRainfall({ palette }: { palette: Palette }) {
             <Info>
               It replaces an earlier, uncalibrated law P(t) = P<sub>24h</sub>·(t/24)<sup>1/3</sup>. As a check against the
               gauge statistics quoted by ORSTOM (BCEOM 1967, Antananarivo, 10-year): 67 mm in 1 h and 93 mm in 3 h, an exponent
-              of about 0.30 between 1 and 3 hours, against 0.4 here. Both are fitted on highland gauges; the law is still to be
-              checked on GPM half-hourly data for the coasts and the west.
+              of about 0.30 between 1 and 3 hours, against 0.4 here. Half-hourly GPM on heavy non-cyclone days (below) confirms the
+              law at 3 h in every region; at 24 h it finds about 1.02 PJ rather than 1.19.
             </Info>
           </div>
         </div>
@@ -187,12 +191,87 @@ export function DesignRainfall({ palette }: { palette: Palette }) {
         </Card>
       )}
 
-      <Card title="Design durations" subtitle="Chosen a priori from the storm types and the GPM record, then validated with flood runs.">
+      {pilot.length > 0 && (
+        <Card title="Pilot flood runs: the flood model cannot set the non-cyclone duration"
+          subtitle={`100-year non-cyclone storms of 1, 3 and 6 h on the urban Antananarivo catchment (${fmt(d.catchments.find((x) => x.basin_id === pilot[0].basin_id)?.area_km2 ?? 0)} km²), two storm shapes, flood maps compared cell by cell with the deepest of the three (the envelope).`}>
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+            <Table caption="Pilot runs: share of the flood envelope reproduced by each duration"
+              head={['Storm', 'Flooded area', 'Deepest here (share of area)', 'Within 5 cm of the envelope', 'Building loss ÷ envelope']}
+              rows={pilot.map((r) => [`${r.duration_h} h, ${r.shape}`, `${fmt(r.flooded_km2, 1)} km²`, `${fmt(r.critical_share_pct, 0)}%`,
+                `${r.within_5cm_pct.toFixed(1)}%`, r.loss_vs_envelope.toFixed(2)])} />
+            <Info>
+              Both shapes were run because they treat the peak differently. The <b>double triangle</b> keeps the same 30-min core at
+              every duration. The <b>single triangle</b> spreads the rain, so its peak falls as the storm gets longer (64, 34 and 23 mm/h).
+              With either shape the 6 h storm gives the deepest water on 90–97% of the flooded area. The two shapes flood almost the same
+              volume at each duration, and the flood volume peaks when the rain stops. Short, intense storms win only in about 10% of the
+              area (steep slopes and channels). The flood therefore follows the volume of rain: a longer storm of the same return
+              period always floods more, and no duration of the flood response emerges. The design duration has to come from how long
+              heavy non-cyclone rain really lasts, measured below.
+            </Info>
+          </div>
+        </Card>
+      )}
+
+      {dc && (
+        <Card title="How long heavy non-cyclone rain lasts: half-hourly GPM"
+          subtitle={`The ${dc.per_season} wettest non-cyclone days of each season (at least ${dc.min_day_mm} mm) on the ${dc.n_catchments} test catchments, ${dc.n_seasons} seasons (1998–2025): ${fmt(dc.n_days)} catchment-days, ${fmt(dc.n_dates)} days of half-hourly GPM IMERG (V07, final run).`}>
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+            <Figure src={dataUrl('figures/nontc_duration_check.png')}
+              alt="Four panels: share of the day's rain in the wettest t hours against the law; time needed to deliver 80% of the day's rain by region; composite hyetograph around the peak; local time of the peak" />
+            <div>
+              <div className="grid grid-cols-2 gap-3">
+                <Stat label="Wettest 3 h" value={pct(ratio(3).median)} sub={`of the day's rain (median); law ${pct(ratio(3).law)}`} />
+                <Stat label="Wettest 12 h" value={pct(ratio(12).median)} sub="of the day's rain (median)" />
+                <Stat label="80% of the day in" value={`${fmt(dc.d80_median_h, 1)} h`} sub={`median; within 3 h on only ${pct(dc.d80_within_h['3'])} of days`} />
+                <Stat label="Peak between 15:00 and 23:00" value={pct(dc.peak_local_15_23_share)} sub="local time: afternoon and evening storms" />
+              </div>
+              <Info>
+                Method: catchment-average half-hourly rain for each selected day (the UTC day of the daily record, 03:00–03:00 local
+                time, with 6 h either side to catch storms cut at midnight). The half-hourly totals match the daily record
+                exactly (median ratio {dc.hhr_over_daily.toFixed(3)}). Cyclone days are excluded with the same attribution as the
+                design depths (500 km).
+              </Info>
+            </div>
+          </div>
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+            <div>
+              <Table caption="Wettest t hours as a share of the daily depth: observed, law and design storm"
+                head={['Duration', 'Observed median (25–75%)', 'Largest third of days', 'Law 1/3·t^0.4', '12 h design storm']}
+                rows={dc.ratios.filter((r) => [0.5, 1, 2, 3, 4, 6, 9, 12, 24].includes(r.t_h)).map((r) => [
+                  r.t_h < 1 ? `${r.t_h * 60} min` : `${r.t_h} h`, `${r.median.toFixed(2)} (${r.p25.toFixed(2)}–${r.p75.toFixed(2)})`,
+                  r.median_top_third.toFixed(2), r.law.toFixed(2), r.design.toFixed(2)])} />
+              <Table caption="By region"
+                head={['Region', 'Days', 'Wettest 3 h', 'Wettest 6 h', 'Wettest 12 h', '80% of the day in']}
+                rows={dc.by_group.map((g) => [g.group, g.n, pct(g.r_3h), pct(g.r_6h), pct(g.r_12h), `${fmt(g.d80_h, 1)} h`])} />
+            </div>
+            <div>
+              <Steps items={[
+                { title: 'The law holds at 3 h', body: <>The wettest 3 h hold {pct(ratio(3).median)} of the day's rain, against {pct(ratio(3).law)} from the law, in every region ({dc.by_group.map((g) => pct(g.r_3h)).join(', ')}) and on the largest days ({pct(ratio(3).median_top_third)}).</> },
+                { title: 'But a 3 h storm is only the core', body: <>It leaves out half of the day's rain. 80% of the day takes a median of {fmt(dc.d80_median_h, 1)} h (90%: {fmt(dc.d90_median_h, 1)} h); only {pct(dc.d80_within_h['3'])} of days deliver it within 3 h, {pct(dc.d80_within_h['6'])} within 6 h and {pct(dc.d80_within_h['12'])} within 12 h. The wettest 12 h hold the whole day ({pct(ratio(12).median)}); 24 h adds almost nothing ({pct(ratio(24).median)}).</> },
+                { title: 'A core and a tail', body: <>Around the wettest half-hour (panel c, {fmt(dc.composite.n)} days), rain builds over 3–4 h and decays over 6–9 h: {pct(dc.composite.before_peak)} of the rain falls before the peak half-hour, {pct(dc.composite.peak_half_hour)} in it and {pct(dc.composite.after_peak)} after. This is the thunderstorm the report describes, a short core and a tail of several hours.</> },
+                { title: 'Thunderstorms, as assumed', body: <>Peaks fall in the afternoon and evening in every region (panel d), the signature of convection. The non-cyclone population is thunderstorm rain.</> },
+                { title: 'Limits', body: <>GPM cells (about 10 km) and its satellite sampling smooth short peaks: below 2 h it falls under the law (30 min: {pct(ratio(0.5).median)} against {pct(ratio(0.5).law)}), where the gauge statistics of the report remain the reference. The same smoothing spreads rain in time, so real events are, if anything, a little shorter than measured here.</> },
+              ]} />
+            </div>
+          </div>
+          <Info>
+            <b>Conclusion: the non-cyclone design event lasts 12 hours and holds the daily depth PJ.</b> Its 30-min core holds
+            P(0.5 h) from the law, and its wettest 3 h come out at {pct(ratio(3).design)} of PJ (law {pct(ratio(3).law)}, observed{' '}
+            {pct(ratio(3).median)}). From 3 to 12 h, the design storm follows the observed medians ({[4, 6, 9].map((t) => `${t} h: ${ratio(t).design.toFixed(2)} against ${ratio(t).median.toFixed(2)}`).join('; ')}).
+            The peak sits at {fmt(cfg.nontc.centre_frac * 100)}% of the event, so that {pct(dc.design_before_peak_offpeak)} of the rain
+            outside the 30-min core falls before it (observed {pct(dc.composite.before_peak / (dc.composite.before_peak + dc.composite.after_peak))}).
+            With the duration set by the rain, one non-cyclone run per return period is enough, and no flood runs over a range of
+            durations are needed.
+          </Info>
+        </Card>
+      )}
+
+      <Card title="Design durations" subtitle="Set by how long each storm type lasts in the GPM record, consistent with the report.">
         <Table caption="Design and validation durations per storm type"
-          head={['Storm type', 'Design duration', 'Validation durations', 'Basis']}
+          head={['Storm type', 'Design duration', 'Other durations compared', 'Basis']}
           rows={[
-            ['Non-cyclone (thunderstorm)', `${cfg.nontc.duration_h} h`, d.validation_durations.nontc.map((x) => `${x} h`).join(', '),
-              'Core under an hour plus a tail of a few hours; beyond about 3 h, rain is no longer part of the same thunderstorm. A larger catchment may need 6 h, when its response is slower than the storm.'],
+            ['Non-cyclone (thunderstorm)', `${cfg.nontc.duration_h} h`, '–',
+              dc ? `Half-hourly GPM on ${fmt(dc.n_days)} heavy non-cyclone catchment-days: a 3 h core holding ${pct(ratio(3).median)} of the day, 80% of the day in a median ${fmt(dc.d80_median_h, 1)} h, the whole day within 12 h. Pilot flood runs show floods follow rain volume, so the event, not the core, is modelled.` : ''],
             ['Cyclone', `${cfg.tc.duration_h} h`, d.validation_durations.tc.map((x) => `${x} h`).join(', '),
               `Recorded cyclone rain lasts 50–68 h without a break; the median cyclone event in GPM lasts ${fmt(ev.median, 0)} days. Moderate intensities make the flood depend on volume, so on the longest realistic duration.`],
             ['Non-cyclone multi-day series', 'not modelled', '–', 'Only described qualitatively, and only for the highlands; the 72 h cyclone storm covers the high-volume case.'],
@@ -251,7 +330,7 @@ export function DesignRainfall({ palette }: { palette: Palette }) {
         <p className="mt-1 text-xs text-ink-3">Catchment {c.basin_id} ({fmt(c.area_km2)} km²). Daily depth PJ, {rp}-year: non-cyclone {fmt(c.daily_depth_mm.nontc[rp])} mm, cyclone {fmt(c.daily_depth_mm.tc[rp])} mm.</p>
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
           <Steps items={[
-            { title: 'Non-cyclone: double triangle', body: <>The Desbordes double-triangle storm used in French urban drainage practice. The storm holds P({cfg.nontc.duration_h} h) from the law. An intense period of {fmt(cfg.nontc.intense_h * 60)} min holds P({fmt(cfg.nontc.intense_h, 1)} h) and is centred at {fmt(cfg.nontc.centre_frac * 100)}% of the storm, snapped to the {cfg.nontc.step_min}-min blocks: thunderstorms start abruptly. An outer triangle over the whole storm carries the background rain and an inner triangle over the intense period tops it up, so both depths are met exactly.</> },
+            { title: 'Non-cyclone: double triangle', body: <>The Desbordes double-triangle storm used in French urban drainage practice. The {cfg.nontc.duration_h} h storm holds the daily depth PJ (the wettest 12 h of heavy non-cyclone days hold the whole day). An intense period of {fmt(cfg.nontc.intense_h * 60)} min holds P({fmt(cfg.nontc.intense_h, 1)} h) from the law and is centred at {fmt(cfg.nontc.centre_frac * 100)}% of the storm, snapped to the {cfg.nontc.step_min}-min blocks, so that the rain before and after the peak splits as observed. An outer triangle over the whole storm carries the tail and an inner triangle over the intense period tops it up, so both depths are met exactly; the wettest 3 h then follow the law.</> },
             { title: 'Non-cyclone: soil moisture', body: <>Average antecedent conditions (GCN250 {cfg.nontc.gcn250_arc}).</> },
           ]} />
           <Steps items={[
@@ -264,7 +343,7 @@ export function DesignRainfall({ palette }: { palette: Palette }) {
 
       <Card title="Intensity checks" subtitle={`Design peak intensities of the ${d.catchments.length} test catchments against the intensities recorded in Madagascar (${REPORT}).`}>
         <Table caption="Peak intensities of the design storms per test catchment"
-          head={['Catchment', 'Non-cyclone 3 h, 10-min peak (10 / 100-yr, mm/h)', 'Cyclone 72 h, 30-min peak (10 / 100-yr, mm/h)', 'Cyclone wettest day ÷ 24 h design depth (100-yr)']}
+          head={['Catchment', `Non-cyclone ${cfg.nontc.duration_h} h, 10-min peak (10 / 100-yr, mm/h)`, 'Cyclone 72 h, 30-min peak (10 / 100-yr, mm/h)', 'Cyclone wettest day ÷ 24 h design depth (100-yr)']}
           rows={d.catchments.map((x) => {
             const n10 = x.storms.find((s) => s.population === 'nontc' && s.duration_h === cfg.nontc.duration_h && s.rp === 10)!
             const n100 = x.storms.find((s) => s.population === 'nontc' && s.duration_h === cfg.nontc.duration_h && s.rp === 100)!
@@ -286,18 +365,17 @@ export function DesignRainfall({ palette }: { palette: Palette }) {
             so the 72 h storm never contains a day rarer than the storm itself. Its 30-min peak follows the Antananarivo law,
             fitted on storms that are mostly thunderstorms, and exceeds the {cap} mm/h recorded in cyclones at 100 years in some
             catchments. This is kept on purpose: it errs on the safe side, the recorded ceiling rests on two events, and cyclone
-            floods depend mostly on volume. The validation runs show whether the peak matters.
+            floods depend mostly on volume (as the non-cyclone pilot runs show).
           </Info>
         </div>
       </Card>
 
-      <Card title="Validation of the design durations" subtitle="Planned: flood runs over a range of durations per storm type, before the national runs.">
+      <Card title="Validation of the design durations" subtitle="Both durations rest on the rain record; flood runs showed why they cannot come from the flood model.">
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <Steps items={[
-            { title: 'Runs', body: <>The {d.catchments.length - 2} test catchments of the first test (the two largest, about 750 km², follow on cloud machines), at 10 and 100 years: non-cyclone storms of {d.validation_durations.nontc.join(', ')} h on average soils and cyclone storms of {d.validation_durations.tc.join(', ')} h on wet soils, with the shapes above. Each run continues 12 h after the rain.</> },
-            { title: 'Critical duration', body: <>For each storm type, the maximum depth of every cell over all its durations (the envelope), and the duration that produces it.</> },
-            { title: 'Acceptance', body: <>A design duration is kept when its flood map reproduces the envelope: depth within 5 cm on at least 99% of the flooded area and at least 99% of the envelope's building loss. Otherwise the duration closing the gap is added, or the duration is tied to catchment properties (time of concentration, area, slope, closed basins) so that it carries over to the catchments not tested.</> },
-            { title: 'Peak sensitivity', body: <>The cyclone runs also show whether the 30-min peak above {cap} mm/h changes the flood maps.</> },
+            { title: 'Non-cyclone: 12 h', body: <>Half-hourly GPM on heavy non-cyclone days, above: the whole day falls within about 12 h, around a 3 h core that matches the law.{dc ? ` ${fmt(dc.n_days)} catchment-days, four regions.` : ''} <b>Done.</b></> },
+            { title: 'Cyclone: 72 h', body: <>The largest cyclone events in the daily GPM record last a median of {fmt(ev.median, 0)} days, consistent with the 50–68 h of continuous cyclone rain in the report. <b>Done.</b></> },
+            { title: 'Why not flood runs', body: <>Flood runs over a range of durations were planned to find a critical duration. The pilot runs show the flood follows rain volume: at a given return period the longest storm always floods most, so the runs cannot bound the duration. The rain record does.</> },
           ]} />
           <div>
             {rc && (

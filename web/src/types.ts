@@ -91,10 +91,24 @@ export interface DesignStorm {
 
 type Spread = { min: number; median: number; max: number }
 
+export interface NontcDurationCheck {
+  n_days: number; n_dates: number; n_catchments: number; n_seasons: number; per_season: number; min_day_mm: number
+  hhr_over_daily: number
+  ratios: { t_h: number; law: number; p25: number; median: number; p75: number; median_top_third: number; design: number }[]
+  d80_within_h: Record<string, number>; d80_median_h: number; d90_median_h: number
+  by_group: { group: string; n: number; r_3h: number; r_6h: number; r_12h: number; d80_h: number; daily_mm: number }[]
+  peak_local_15_23_share: number
+  composite: { n: number; before_peak: number; peak_half_hour: number; after_peak: number }
+  design_before_peak_offpeak: number
+}
+
 export interface DesignStorms {
+  nontc_duration_check: NontcDurationCheck | null
+  nontc_pilot: { shape: string; basin_id: string; slot: string; duration_h: number; flooded_km2: number; critical_share_pct: number;
+                 within_5cm_pct: number; loss_vs_envelope: number; t_volume_peak_h: number }[]
   law: { coefficient: number; exponent: number; ratios: { t_h: number; p_over_pj: number }[] }
   config: {
-    nontc: { duration_h: number; intense_h: number; centre_frac: number; step_min: number; gcn250_arc: string }
+    nontc: { duration_h: number; total: 'daily' | 'law'; intense_h: number; centre_frac: number; step_min: number; gcn250_arc: string }
     tc: { duration_h: number; step_min: number; gcn250_arc: string }
     report_peak_mm_hr: number
   }
