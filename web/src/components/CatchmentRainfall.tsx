@@ -303,7 +303,7 @@ export function CatchmentRainfall({ catchments, palette, dark, initial }: {
                     </div>
                   ))}
                 </div>
-                <p className="mt-1 text-xs text-ink-3">Design durations: 12 h (non-TC, set by half-hourly GPM) and 72 h (cyclone); the other cyclone durations are for comparison. Shapes are explained in the design storm section above.</p>
+                <p className="mt-1 text-xs text-ink-3">Design durations: 12 h (non-TC, set by half-hourly GPM) and 72 h (cyclone); the other cyclone durations are for comparison. Shapes are explained in Chapter 5.</p>
               </section>
               <section>
                 <div className="flex flex-wrap items-center justify-between gap-2">

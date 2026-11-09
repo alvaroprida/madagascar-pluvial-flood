@@ -98,7 +98,7 @@ export interface NontcDurationCheck {
   d80_within_h: Record<string, number>; d80_median_h: number; d90_median_h: number
   by_group: { group: string; n: number; r_3h: number; r_6h: number; r_12h: number; d80_h: number; daily_mm: number }[]
   peak_local_15_23_share: number
-  composite: { n: number; before_peak: number; peak_half_hour: number; after_peak: number }
+  composite: { n: number; before_peak: number; peak_half_hour: number; after_peak: number; mean_share: number[]; design_share: number[] }
   design_before_peak_offpeak: number
 }
 
@@ -114,7 +114,7 @@ export interface DesignStorms {
   }
   tc_day_shares: {
     method: string
-    shares: Record<'2d' | '3d' | '4d', { median: number[]; p25: number[]; p75: number[]; n_events: number }>
+    shares: Record<'2d' | '3d' | '4d', { median: number[]; p25: number[]; p75: number[]; wettest_day_position: number[]; second_before_wettest: number; n_events: number }>
     event_length_days: { median: number; p75: number; p90: number; share_by_days: Record<string, number> }
   }
   radius_check: {
@@ -126,6 +126,21 @@ export interface DesignStorms {
       catchments_nontc_rp100_up_more_than_10pct: number
       n_catchments: number
       top3_nontc_maxima_on_tc_days_at_adopted_radius: { those_catchments: number; other_catchments: number }
+    }
+    figures?: {
+      example: { storm: string; date: string; land_cells_50mm_between_radii: number; nearest_coast_km: number }
+      step2: {
+        share_land: Record<string, number>
+        land: { total_mm: number; moved_mm: number; change_pp: number; band_days: number }
+        regions: { region: string; total_mm: number; moved_mm: number; change_pp: number; band_days: number }[]
+      }
+      step3_seasonal_maxima: Record<'tc' | 'nontc', {
+        seasons_without_rain: [number, number]; maxima_lower: number; maxima_higher: number; median_maximum_ratio: number
+        top_maxima_ratio: { p05: number; median: number; p95: number }
+      }>
+      step4: { n_above: number; regions: { region: string; heavy_band_days_per_decade: number; catchments: number; share_above_10pct: number }[] }
+      distance_outlined: Record<'within_tested' | 'between' | 'adopted_to_1000' | 'beyond_adopted', number>
+      distance_others: Record<'within_tested' | 'between' | 'adopted_to_1000' | 'beyond_adopted', number>
     }
   } | null
   validation_durations: Record<'nontc' | 'tc', number[]>

@@ -154,3 +154,81 @@ export function Steps({ items }: { items: { title: string; body: ReactNode }[] }
     </ol>
   )
 }
+
+/** Scroll to a chapter or section by element id (the URL hash holds the tab, so no anchors). */
+export const scrollToId = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+
+/** Inline cross-reference to a chapter or section. */
+export function Ref({ to, children }: { to: string; children: ReactNode }) {
+  return (
+    <button type="button" onClick={() => scrollToId(to)} className="font-medium text-accent underline decoration-dotted underline-offset-2 hover:decoration-solid">
+      {children}
+    </button>
+  )
+}
+
+export interface ChapterEntry { id: string; number: number; title: string; summary: string }
+
+/** Clickable table of contents. */
+export function ChapterIndex({ title, chapters }: { title: string; chapters: ChapterEntry[] }) {
+  return (
+    <nav id="contents" aria-label={title} className="scroll-mt-4 rounded-xl border border-line bg-surface p-4 md:p-5">
+      <h2 className="text-base font-semibold text-ink">{title}</h2>
+      <ol className="mt-3 grid gap-2 md:grid-cols-2">
+        {chapters.map((c) => (
+          <li key={c.id}>
+            <button type="button" onClick={() => scrollToId(c.id)}
+              className="group flex w-full gap-3 rounded-lg border border-line p-3 text-left hover:border-accent">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-banner text-sm font-semibold text-accent">{c.number}</span>
+              <span>
+                <span className="block text-sm font-medium text-ink group-hover:text-accent">{c.title}</span>
+                <span className="block text-xs leading-relaxed text-ink-3">{c.summary}</span>
+              </span>
+            </button>
+          </li>
+        ))}
+      </ol>
+    </nav>
+  )
+}
+
+/** Report chapter: numbered heading, what it builds on, its content, and what it hands on. */
+export function Chapter({ entry, builds, outcome, children }: {
+  entry: ChapterEntry
+  builds?: ReactNode
+  outcome?: ReactNode
+  children: ReactNode
+}) {
+  return (
+    <section id={entry.id} className="scroll-mt-4 space-y-4 pt-4" aria-labelledby={`${entry.id}-title`}>
+      <header className="border-b border-line pb-3">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 id={`${entry.id}-title`} className="text-xl font-semibold text-ink">
+            <span className="text-accent">{entry.number}.</span> {entry.title}
+          </h2>
+          <button type="button" onClick={() => scrollToId('contents')} className="text-xs text-ink-3 hover:text-ink">↑ Contents</button>
+        </div>
+        <p className="mt-1 text-sm leading-relaxed text-ink-2">{entry.summary}</p>
+        {builds && <p className="mt-1 text-sm leading-relaxed text-ink-2"><span className="font-medium text-ink">Builds on:</span> {builds}</p>}
+      </header>
+      {children}
+      {outcome && (
+        <div className="rounded-xl border border-accent/40 bg-banner p-4 text-sm leading-relaxed text-ink-2">
+          <span className="font-semibold text-ink">Outcome of Chapter {entry.number}.</span> {outcome}
+        </div>
+      )}
+    </section>
+  )
+}
+
+/** Collapsed supporting material. */
+export function Toggle({ title, children }: { title: ReactNode; children: ReactNode }) {
+  return (
+    <details className="group rounded-xl border border-line bg-surface p-4 md:p-5">
+      <summary className="cursor-pointer list-none text-base font-semibold text-ink">
+        <span className="mr-2 inline-block text-accent transition-transform group-open:rotate-90">▸</span>{title}
+      </summary>
+      <div className="mt-3 space-y-4">{children}</div>
+    </details>
+  )
+}
