@@ -123,5 +123,153 @@
     18
    ]
   ]
- }
+ },
+ "rapid": [
+  {
+   "event": "Enawo 2017",
+   "source": "UNOSAT",
+   "sensors": "TerraSAR-X",
+   "dates": "08/03–10/03/2017",
+   "n_areas": 2,
+   "analysed_km2": 40321,
+   "flooded_km2": 234.3,
+   "driver_pct": {
+    "Coastal (≤ 10 km of shore)": 49.7,
+    "Fluvial-prone (catchment with upstream inflow)": 30.7,
+    "Headwater (pluvial candidate)": 19.5
+   }
+  },
+  {
+   "event": "Ava 2018",
+   "source": "UNOSAT",
+   "sensors": "Sentinel-1",
+   "dates": "07/01–07/01/2018",
+   "n_areas": 4,
+   "analysed_km2": 15610,
+   "flooded_km2": 667.7,
+   "driver_pct": {
+    "Coastal (≤ 10 km of shore)": 57.9,
+    "Fluvial-prone (catchment with upstream inflow)": 29.3,
+    "Headwater (pluvial candidate)": 12.9
+   }
+  },
+  {
+   "event": "Diane 2020",
+   "source": "UNOSAT",
+   "sensors": "VIIRS",
+   "dates": "23/01–23/01/2020",
+   "n_areas": 0,
+   "analysed_km2": null,
+   "flooded_km2": 9475.0,
+   "driver_pct": {}
+  },
+  {
+   "event": "Batsirai 2022",
+   "source": "UNOSAT",
+   "sensors": "KOMPSAT-5, RCM, Sentinel-1, Sentinel-2, TerraSAR-X",
+   "dates": "07/02–15/02/2022",
+   "n_areas": 10,
+   "analysed_km2": 17043,
+   "flooded_km2": 671.9,
+   "driver_pct": {
+    "Coastal (≤ 10 km of shore)": 29.0,
+    "Fluvial-prone (catchment with upstream inflow)": 52.7,
+    "Headwater (pluvial candidate)": 18.2
+   }
+  },
+  {
+   "event": "Emnati 2022",
+   "source": "UNOSAT",
+   "sensors": "RCM, Sentinel-1, Sentinel-2, TerraSAR-X",
+   "dates": "24/02–01/03/2022",
+   "n_areas": 12,
+   "analysed_km2": 11646,
+   "flooded_km2": 678.7,
+   "driver_pct": {
+    "Coastal (≤ 10 km of shore)": 45.0,
+    "Fluvial-prone (catchment with upstream inflow)": 25.9,
+    "Headwater (pluvial candidate)": 29.1
+   }
+  },
+  {
+   "event": "Freddy 2023",
+   "source": "UNOSAT",
+   "sensors": "TerraSAR-X",
+   "dates": "23/02–23/02/2023",
+   "n_areas": 2,
+   "analysed_km2": 1794,
+   "flooded_km2": 55.3,
+   "driver_pct": {
+    "Coastal (≤ 10 km of shore)": 17.4,
+    "Fluvial-prone (catchment with upstream inflow)": 56.0,
+    "Headwater (pluvial candidate)": 26.6
+   }
+  },
+  {
+   "event": "Alvaro 2024",
+   "source": "UNOSAT",
+   "sensors": "–",
+   "dates": "",
+   "n_areas": 2,
+   "analysed_km2": 9402,
+   "flooded_km2": 0.0,
+   "driver_pct": {}
+  },
+  {
+   "event": "Gamane 2024",
+   "source": "UNOSAT",
+   "sensors": "TanDEM-X",
+   "dates": "01/04–01/04/2024",
+   "n_areas": 1,
+   "analysed_km2": 1477,
+   "flooded_km2": 10.9,
+   "driver_pct": {
+    "Coastal (≤ 10 km of shore)": 88.1,
+    "Fluvial-prone (catchment with upstream inflow)": 11.9,
+    "Headwater (pluvial candidate)": 0.0
+   }
+  },
+  {
+   "event": "Jude 2025",
+   "source": "UNOSAT",
+   "sensors": "RCM",
+   "dates": "09/03–09/03/2025",
+   "n_areas": 1,
+   "analysed_km2": 27173,
+   "flooded_km2": 99.9,
+   "driver_pct": {
+    "Coastal (≤ 10 km of shore)": 54.2,
+    "Fluvial-prone (catchment with upstream inflow)": 16.7,
+    "Headwater (pluvial candidate)": 29.1
+   }
+  },
+  {
+   "event": "Fytia 2026",
+   "source": "Copernicus EMS",
+   "sensors": "VHR optical",
+   "dates": "",
+   "n_areas": 3,
+   "analysed_km2": 208,
+   "flooded_km2": 5.7,
+   "driver_pct": {
+    "Coastal (≤ 10 km of shore)": 72.3,
+    "Fluvial-prone (catchment with upstream inflow)": 27.5,
+    "Headwater (pluvial candidate)": 0.2
+   }
+  },
+  {
+   "event": "Gezani 2026",
+   "source": "Copernicus EMS",
+   "sensors": "VHR optical",
+   "dates": "",
+   "n_areas": 9,
+   "analysed_km2": 426,
+   "flooded_km2": 16.4,
+   "driver_pct": {
+    "Coastal (≤ 10 km of shore)": 23.0,
+    "Fluvial-prone (catchment with upstream inflow)": 32.1,
+    "Headwater (pluvial candidate)": 44.9
+   }
+  }
+ ]
 }

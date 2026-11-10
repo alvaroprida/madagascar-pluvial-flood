@@ -21,7 +21,14 @@ interface Inventory {
     driver_pct: { coastal: number; fluvial_prone: number; headwater: number }
     top_storms: [string, number][]; top_nontc_months: [string, number][]
   }
+  rapid?: { event: string; source: string; sensors: string; dates: string; n_areas: number; analysed_km2: number | null; flooded_km2: number; driver_pct: Drivers }[]
 }
+
+const rapidRows = (r: Inventory['rapid'], source: string) => (r ?? []).filter((x) => x.source === source).map((x) => [
+  x.event, x.dates || '–', x.sensors, x.n_areas, x.analysed_km2 === null ? '–' : fmt(x.analysed_km2), x.flooded_km2 ? fmt(x.flooded_km2, 1) : 'none mapped',
+  Object.keys(x.driver_pct).length ? `${pct(x.driver_pct, 'coastal')} / ${pct(x.driver_pct, 'fluvial')} / ${pct(x.driver_pct, 'headwater')}` : '–',
+])
+const RAPID_HEAD = ['Event', 'Image dates', 'Sensors', 'Areas', 'Analysed (km²)', 'Flooded (km²)', 'Coastal / fluvial-prone / headwater']
 
 const CHAPTERS: ChapterEntry[] = [
   { id: 'inventory', number: 1, title: 'Inventory of existing calibration and validation datasets', summary: 'What observed and modelled flood data exist for Madagascar, where they lie, what they can and cannot show about pluvial flooding, and which events to simulate next.' },
@@ -141,17 +148,21 @@ export function Calibration({ palette }: { palette: Palette }) {
     ['H1 Groundsource (news)', 'Reported flood locations, 2005–2026', 'Mixed; ~25% of locations in headwater catchments', 'Validation: hit rate at reported locations; event selection', 'Location check for event impact', 'High (many events, national)'],
     ['H2 Haruna 2013, Atsimo Andrefana', 'Mapped flooded zones, one event', 'Mostly fluvial and coastal', 'Validation of a Haruna run on headwater parts; negative test elsewhere', 'Context', 'Medium'],
     ['H3 Vatovavy Fitovinany flood-prone areas', 'Expert map, no event, no return period', 'Mostly coastal and deltaic', 'Qualitative check only', '–', 'Low'],
+    ['H5 UNOSAT flood extents (9 cyclones)', '3–20 m satellite flood maps with analysed areas, 2017–2025', 'Mostly coastal and fluvial; highland catchments in Haute Matsiatra', 'Validation: CSI and false alarms inside analysed areas', 'Event exposure check', 'High'],
+    ['H6 Copernicus EMS (Fytia, Gezani 2026)', 'Very-high-resolution flood delineation', 'Mixed; urban Antananarivo', 'Validation in town (Antananarivo) and on the east coast', 'Event exposure check', 'High, but small areas'],
     ['H4 Cheneso 2023, Mahajanga (modelled)', '1 m depth from a detailed urban drainage model', 'Pluvial with tidal boundary', 'Calibration benchmark (extent and depth)', 'Event exposure check', 'High, but local and modelled'],
     ['R1 Cyclone impact catalogue 2000–2022', 'Deaths, affected, damage per cyclone and year', 'All cyclone causes', '–', 'Upper bound for average annual affected population and loss; event order of magnitude', 'Medium'],
     ['R2 Flood events 1985–2022', 'Deaths and affected per flood event', 'Flooding (21 cyclone events, 1 heavy rain)', '–', 'People affected per event (flood only)', 'Medium'],
   ]
 
   const nextEvents: (string | number)[][] = [
-    ['Cheneso, Jan 2023', 'Cyclone', 'Mahajanga (Metzinger valley); north-west', 'H4 depth and extent; Groundsource locations', 'Calibration: roughness, infiltration (curve number), depth bias. Also run the study\'s 10-year 24 h storm against our 10-year design'],
-    ['Ana, Jan 2022', 'Cyclone (weak) / heavy rain', 'Antananarivo and highlands', `Groundsource (${g?.top_storms.find((s) => s[0].startsWith('Ana'))?.[1] ?? '…'} reports, most of any storm); R1 960,000 affected`, 'Validation of hazard (hit rate) and event affected population'],
-    ['Feb 2015 heavy rains', 'Non-cyclone', 'Antananarivo', `Groundsource (${g?.top_nontc_months.find((s) => s[0] === '2015-02')?.[1] ?? '…'} reports, largest non-cyclone month)`, 'Validation of the 12 h non-cyclone storm'],
-    ['Haruna, Feb 2013', 'Cyclone', 'Atsimo Andrefana (south-west)', 'H2 headwater parts (CSI); fluvial and coastal parts as negative test', 'Validation of extent'],
-    ['Enawo 2017, Batsirai 2022, Gamane 2024', 'Cyclone', 'North-east, east, north', 'Groundsource; R1 (Enawo 415 M USD, 430,000 affected)', 'Validation across regions and event impact'],
+    ['Cheneso, Jan 2023', 'Cyclone', 'Mahajanga (Metzinger valley)', 'H4 depth and extent; Groundsource locations', 'Calibration: roughness, curve-number condition, depth bias; also the study\'s 10-year 24 h storm against our 10-year design'],
+    ['Batsirai and Emnati, Feb 2022', 'Cyclone', 'Haute Matsiatra highlands; south-east plains', 'H5 flood extents (13 areas each), headwater parts first', 'Validation of extent (CSI, hit rate, false alarms) in highland catchments'],
+    ['Gezani, Feb 2026', 'Cyclone', 'Antananarivo; Toamasina; Ambatondrazaka', 'H6 very-high-resolution flooded areas; Groundsource', 'Validation in town; needs IMERG Late rainfall'],
+    ['Ana, Jan 2022', 'Cyclone (weak) / heavy rain', 'Antananarivo and highlands', `Groundsource (${g?.top_storms.find((s) => s[0].startsWith('Ana'))?.[1] ?? '…'} reports); R1 960,000 affected`, 'Validation of hit rate and event affected population (no satellite map)'],
+    ['Feb 2015 heavy rains', 'Non-cyclone', 'Antananarivo', `Groundsource (${g?.top_nontc_months.find((s) => s[0] === '2015-02')?.[1] ?? '…'} reports)`, 'Validation of the 12 h non-cyclone storm'],
+    ['Ava 2018, Freddy 2023', 'Cyclone', 'East and south-east coast', 'H5 flood extents', 'Check that coastal and fluvial flooding is not attributed to the pluvial model (negative test)'],
+    ['Haruna, Feb 2013', 'Cyclone', 'Atsimo Andrefana', 'H2 headwater parts', 'Secondary validation of extent'],
   ]
 
   return (
@@ -161,15 +172,15 @@ export function Calibration({ palette }: { palette: Palette }) {
       <Chapter entry={CHAPTERS[0]}
         builds={<>the design storms (Rainfall tab), the flood model setup and the risk computation (Risk tab).</>}
         outcome={<>
-          One dataset can calibrate (Cheneso in Mahajanga, itself a model); Groundsource and the Haruna extent can validate once
+          One dataset can calibrate (Cheneso in Mahajanga, itself a model); the UNOSAT and Copernicus EMS satellite maps, Groundsource and the Haruna extent can validate once
           fluvial and coastal flooding are set aside; the impact catalogues bound the risk metrics from above. Next steps: simulate the
-          five event groups in the last table, forced with half-hourly GPM IMERG, calibrate on Cheneso, then validate on the others
+          seven event groups in the last table, forced with half-hourly GPM IMERG, calibrate on Cheneso, then validate on the others
           and compare modelled event and average annual impacts with R1 and R2.
         </>}>
 
-        <Card title="Where the datasets lie" subtitle="Regional extents in the south-west and south-east, one urban catchment in the north-west, news reports island-wide">
+        <Card title="Where the datasets lie" subtitle="Satellite flood maps mostly along the east and south-east coast, regional extents in the south-west and south-east, one urban catchment in the north-west, news reports island-wide">
           <Figure src={fig('calinv_coverage.png')} maxHeight={720}
-            alt="Map of Madagascar with Groundsource event locations, Haruna flooded zones, Vatovavy Fitovinany flood-prone areas and the Mahajanga model box" />
+            alt="Map of Madagascar with Groundsource event locations, Haruna flooded zones, Vatovavy Fitovinany flood-prone areas, UNOSAT and Copernicus EMS analysed areas and the Mahajanga model box" />
           <Info>
             None of these datasets is specific to pluvial flooding. The hazard data are therefore read through a separation of
             flood drivers, and the impact data are used as upper bounds rather than calibration targets.
@@ -216,6 +227,31 @@ export function Calibration({ palette }: { palette: Palette }) {
           ['Limitations', 'A model, not an observation; includes canals, culverts and blockages that SFINCS at catchment scale does not resolve; one small catchment.'],
         ]}>
           <Figure src={fig('calinv_mahajanga.png')} alt="Map of modelled maximum water depth in the Metzinger valley, Mahajanga, and bar chart of flooded area by depth class" />
+        </Dataset>
+
+        <Dataset id="H5" title="UNOSAT satellite-detected flood extents" kind="Event flood maps from satellite imagery, 2017–2025, nine cyclones" rows={[
+          ['Content', 'Flood extent (water detected after the event minus normal water) and the analysed area for each image, mostly Sentinel-1/2, TerraSAR-X, RCM and KOMPSAT-5 at about 3–20 m; one national VIIRS map at 375 m for January 2020. Outside the analysed area nothing was observed.'],
+          ['Source', 'UNITAR-UNOSAT rapid mapping, distributed on the Humanitarian Data Exchange (42 Madagascar entries, nine archives). Free for humanitarian and research use with attribution.'],
+          ['Flood drivers', 'Not labelled. Most maps cover the east and south-east coastal plains and lower rivers; Haute Matsiatra (Fianarantsoa highlands, Batsirai and Emnati 2022) is the main exception.'],
+          ['Limitations', 'Single snapshots a few days after landfall (pluvial ponding may already have drained); radar misses water in dense built-up areas and under vegetation; the Alvaro 2024 archive has analysed areas but no flood layer.'],
+        ]}>
+          <Figure src={fig('calinv_rapid_coverage.png')} maxHeight={720} alt="Map of Madagascar with UNOSAT and Copernicus EMS analysed areas and flooded areas coloured by event" />
+          <div className="mt-3">
+            <TextTable caption="UNOSAT maps per event; flooded area merged over all images of the event; flood-driver split of the flooded area (coastal within 10 km of the shore / catchment with upstream inflow / headwater)"
+              head={RAPID_HEAD} rows={rapidRows(inv?.rapid, 'UNOSAT')} />
+          </div>
+        </Dataset>
+
+        <Dataset id="H6" title="Copernicus EMS rapid mapping" kind="Very-high-resolution flood delineation, 2026, two cyclones" rows={[
+          ['Content', 'Observed flooded areas and flood traces, delineated by photo-interpretation and semi-automatic extraction on very-high-resolution imagery, within each area of interest (grading products and their monitoring updates).'],
+          ['Source', 'Copernicus Emergency Management Service, rapid mapping activations EMSR863 (Fytia, January 2026) and EMSR867 (Gezani, February 2026). The public catalogue lists no earlier Madagascar activation.'],
+          ['Flood drivers', 'Not labelled. Gezani includes Antananarivo, the only very-high-resolution urban flood map available; most of it lies in the Ikopa plain (fluvial), the rest in town.'],
+          ['Limitations', 'Small areas of interest (8–113 km²); 2026 events lie beyond the GPM IMERG Final record (to September 2025), so their runs need IMERG Late rainfall.'],
+        ]}>
+          <TextTable caption="Copernicus EMS maps per event" head={RAPID_HEAD} rows={rapidRows(inv?.rapid, 'Copernicus EMS')} />
+          <div className="mt-3">
+            <Figure src={fig('calinv_rapid_examples.png')} alt="Three satellite maps of flooded areas coloured by likely driver: Haute Matsiatra after Batsirai, Antananarivo after Gezani, Manakara after Freddy" />
+          </div>
         </Dataset>
 
         <h3 className="pt-2 text-lg font-semibold text-ink">Risk datasets</h3>
@@ -278,9 +314,9 @@ export function Calibration({ palette }: { palette: Palette }) {
           <div className="mt-4" />
           <Steps items={[
             { title: '1 · Calibrate on Cheneso (H4)', body: 'Run the Mahajanga catchment with the Cheneso rainfall and tide; tune Manning roughness and curve-number condition to match the H4 extent (critical success index) and depth distribution; check the 10-year design against the study\'s 10-year 24 h storm.' },
-            { title: '2 · Validate hazard', body: 'Freeze parameters; run Ana, Feb 2015, Haruna, Enawo, Batsirai and Gamane. Score the hit rate at Groundsource locations in headwater catchments (flooded above 15 cm within the footprint) and the critical success index on the Haruna headwater polygons; fluvial and coastal parts of H2 and H3 should stay mostly dry in the pluvial model.' },
+            { title: '2 · Validate hazard', body: 'Freeze parameters; run Batsirai, Emnati, Gezani, Ana, Feb 2015, Ava, Freddy and Haruna. Score the critical success index and false alarms on the UNOSAT and Copernicus EMS maps inside their analysed areas, headwater catchments first, and the hit rate at Groundsource locations (flooded above 15 cm within the footprint); coastal and fluvial parts of H2, H3 and H5 should stay mostly dry in the pluvial model.' },
             { title: '3 · Validate risk', body: 'Overlay event depths with exposure: people affected and loss per event against R1 and R2 (pluvial share expected well below the totals). Then compare modelled average annual affected population and loss with the R1 means as an upper bound.' },
-            { title: '4 · Data still to obtain', body: 'The Sava flood-prone polygons; the observation date and method of the Haruna map; event flood maps from Copernicus EMS / UNOSAT for Ana, Batsirai and Freddy where they exist.' },
+            { title: '4 · Data still to obtain', body: 'The Sava flood-prone polygons; the observation date and method of the Haruna map; own Sentinel-1 flood maps for events without UNOSAT or Copernicus EMS products (Ana 2022, Cheneso 2023, Feb 2015 rains); commune-level impacts (DesInventar, BNGRC situation reports) for risk.' },
           ]} />
         </Card>
       </Chapter>
