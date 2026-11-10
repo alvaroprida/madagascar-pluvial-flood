@@ -32,6 +32,7 @@ const RAPID_HEAD = ['Event', 'Image dates', 'Sensors', 'Areas', 'Analysed (km²)
 
 const CHAPTERS_RAW: ChapterEntry[] = [
   { id: 'consolidated', number: 2, title: 'Consolidated validation dataset', summary: 'One table of events with reported impacts from every source side by side, impacts per district, and yearly totals: the reference against which modelled event impacts and average annual figures are compared.' },
+  { id: 'plan', number: 3, title: 'Calibration and validation plan', summary: 'Run sheet per event (window, catchments, rainfall, ground truth, metrics), the steps to follow and the acceptance criteria.' },
   { id: 'inventory', number: 1, title: 'Inventory of existing calibration and validation datasets', summary: 'What observed and modelled flood data exist for Madagascar, where they lie, what they can and cannot show about pluvial flooding, and which events to simulate next.' },
 ]
 
@@ -42,10 +43,11 @@ interface ValEvent {
   r1_damage_usd: number | null; r2_affected: number | null; di_districts: number | null; di_affected: number | null
   di_victims: number | null; di_houses_destroyed: number | null; reliefweb: string | null; groundsource_reports: number | null
   satellite_flood_km2: number | null; satellite_source: string | null; other_hazard_truth: string | null; rainfall: string
-  role: string | null; affected_max_reported: number | null
+  role: string | null; affected_max_reported: number | null; rw_affected?: number | null; rw_houses_flooded?: number | null
 }
+interface Run { event: string; purpose: string; window_start: string; window_end: string; rainfall: string; n_catchments: number; area_km2: number; n_headwater: number; priority: string; n_priority: number; priority_km2: number; ground_truth: string; metrics: string }
 interface ValAnnual { year: number; r1_affected: number | null; r1_damage_est_usd2020: number | null; di_affected: number | null; di_victims: number | null; di_houses_destroyed: number | null; r1_covered: boolean; di_covered: boolean }
-interface Validation { events: ValEvent[]; annual: ValAnnual[]; n_district_rows: number; n_districts: number }
+interface Validation { events: ValEvent[]; annual: ValAnnual[]; n_district_rows: number; n_districts: number; runs: Run[] }
 
 const nYears = ANNUAL_LOSSES.length
 const meanAffected = ANNUAL_LOSSES.reduce((s, r) => s + r[1], 0) / nYears
@@ -159,28 +161,19 @@ export function Calibration({ palette }: { palette: Palette }) {
   const h = inv?.haruna, v = inv?.v7v, m = inv?.mahajanga, g = inv?.groundsource
   const n = (x: number | undefined, d = 0) => (x === undefined ? '…' : fmt(x, d))
 
-  const usefulness: string[][] = [
-    ['H1 Groundsource (news)', 'Reported flood locations, 2005–2026', 'Mixed; ~25% of locations in headwater catchments', 'Validation: hit rate at reported locations; event selection', 'Location check for event impact', 'High (many events, national)'],
-    ['H2 Haruna 2013, Atsimo Andrefana', 'Mapped flooded zones, one event', 'Mostly fluvial and coastal', 'Validation of a Haruna run on headwater parts; negative test elsewhere', 'Context', 'Medium'],
-    ['H3 Vatovavy Fitovinany flood-prone areas', 'Expert map, no event, no return period', 'Mostly coastal and deltaic', 'Qualitative check only', '–', 'Low'],
-    ['H5 UNOSAT flood extents (9 cyclones)', '3–20 m satellite flood maps with analysed areas, 2017–2025', 'Mostly coastal and fluvial; highland catchments in Haute Matsiatra', 'Validation: CSI and false alarms inside analysed areas', 'Event exposure check', 'High'],
-    ['H6 Copernicus EMS (Fytia, Gezani 2026)', 'Very-high-resolution flood delineation', 'Mixed; urban Antananarivo', 'Validation in town (Antananarivo) and on the east coast', 'Event exposure check', 'High, but small areas'],
-    ['H4 Cheneso 2023, Mahajanga (modelled)', '1 m depth from a detailed urban drainage model', 'Pluvial with tidal boundary', 'Calibration benchmark (extent and depth)', 'Event exposure check', 'High, but local and modelled'],
-    ['R1 Cyclone impact catalogue 2000–2022', 'Deaths, affected, damage per cyclone and year', 'All cyclone causes', '–', 'Upper bound for average annual affected population and loss; event order of magnitude', 'Medium'],
-    ['R3 DesInventar', 'Impacts per event and district, 1982–2024', 'Cyclone (all causes) and flood records', '–', 'Validation of event impacts per district; yearly totals', 'High (district detail)'],
-    ['R4 ReliefWeb', 'Reports per disaster with BNGRC figures', 'Narrative', '–', 'Event and district figures for recent events (manual extraction)', 'Medium'],
-    ['R2 Flood events 1985–2022', 'Deaths and affected per flood event', 'Flooding (21 cyclone events, 1 heavy rain)', '–', 'People affected per event (flood only)', 'Medium'],
+  const summary: string[][] = [
+    ['H1 Groundsource', 'Reported flood locations (news)', '2005–2026; 874 events, 48 cyclones', 'Island-wide, biased to towns and roads', 'Place footprint, start/end date', 'Mixed; ~25% headwater', 'Hit rate at reported places; event selection', 'Location check', 'High'],
+    ['H2 Haruna flooded zones (CPGU)', 'Mapped flood extent', 'Feb 2013; 1 event', 'Atsimo Andrefana (south-west), 10 river reaches', 'Flooded / not (polygons)', 'Mostly fluvial and coastal; 12% headwater', 'CSI on headwater parts; negative test elsewhere', 'Context', 'Medium'],
+    ['H3 Vatovavy Fitovinany flood-prone areas (CPGU)', 'Expert susceptibility map', 'No event, no return period', 'South-east coast, 4 deltas and lower reaches', 'Flood-prone / not', 'Mostly coastal; 10% headwater', 'Qualitative check', '–', 'Low'],
+    ['H4 Cheneso Mahajanga model (GESCOD)', 'Detailed urban drainage model', 'Jan 2023; 1 event + 10-year storm', 'Metzinger valley, Mahajanga (500 ha)', 'Max water depth, 1 m grid', 'Pluvial with tidal boundary', 'Calibration (extent, depth)', 'Exposure check', 'High, local, modelled'],
+    ['H5 UNOSAT flood extents', 'Satellite flood maps (3–20 m)', '2017–2025; 9 cyclones', 'East and south-east coast; Haute Matsiatra; Sava; Menabe', 'Flooded area + analysed area', 'Mostly coastal/fluvial; 13–29% headwater', 'CSI, hit rate, false alarms inside analysed areas', 'Exposure check', 'High'],
+    ['H6 Copernicus EMS', 'Very-high-resolution delineation', '2026; Fytia, Gezani', 'Antananarivo, Toamasina, Ambatondrazaka, Vatomandry, Ambato Boeny', 'Flooded area, flood traces + area of interest', 'Mixed; 45% headwater (Gezani)', 'Urban validation', 'Exposure check', 'High, small areas'],
+    ['R1 Cyclone impact catalogue', 'Reported impacts per cyclone and year', '2000–2022; 60 cyclones', 'National', 'Deaths, affected, damage (13 events; rest derived)', 'All cyclone causes', '–', 'Upper bound for average annual figures; event order of magnitude', 'Medium'],
+    ['R2 Flood events (DFO and others)', 'Reported flood impacts', '1985–2022; 22 events', 'National', 'Deaths, affected', 'Flooding (21 cyclone, 1 rain)', '–', 'Event affected (flood only)', 'Medium'],
+    ['R3 DesInventar', 'Disaster loss database', '1982–2024 (mostly ≤ 2018); 1,017 cyclone + 25 flood records', '113 districts', 'Deaths, affected, victims, houses destroyed/damaged, crops', 'Cyclone records all causes; flood records separate', '–', 'Event impacts per district; yearly totals', 'High'],
+    ['R4 ReliefWeb / BNGRC', 'Humanitarian reports', '1997–2026; 53 cyclone/flood disasters', 'National, some districts', 'Deaths, affected, displaced, houses destroyed/damaged/flooded', 'Narrative; houses flooded is flood-specific', '–', 'Event impacts for recent events; houses flooded vs modelled buildings', 'High for 2022–2026'],
   ]
 
-  const nextEvents: (string | number)[][] = [
-    ['Cheneso, Jan 2023', 'Cyclone', 'Mahajanga (Metzinger valley)', 'H4 depth and extent; Groundsource locations', 'Calibration: roughness, curve-number condition, depth bias; also the study\'s 10-year 24 h storm against our 10-year design'],
-    ['Batsirai and Emnati, Feb 2022', 'Cyclone', 'Haute Matsiatra highlands; south-east plains', 'H5 flood extents (13 areas each), headwater parts first', 'Validation of extent (CSI, hit rate, false alarms) in highland catchments'],
-    ['Gezani, Feb 2026', 'Cyclone', 'Antananarivo; Toamasina; Ambatondrazaka', 'H6 very-high-resolution flooded areas; Groundsource', 'Validation in town; needs IMERG Late rainfall'],
-    ['Ana, Jan 2022', 'Cyclone (weak) / heavy rain', 'Antananarivo and highlands', `Groundsource (${g?.top_storms.find((s) => s[0].startsWith('Ana'))?.[1] ?? '…'} reports); R1 960,000 affected`, 'Validation of hit rate and event affected population (no satellite map)'],
-    ['Feb 2015 heavy rains', 'Non-cyclone', 'Antananarivo', `Groundsource (${g?.top_nontc_months.find((s) => s[0] === '2015-02')?.[1] ?? '…'} reports)`, 'Validation of the 12 h non-cyclone storm'],
-    ['Ava 2018, Freddy 2023', 'Cyclone', 'East and south-east coast', 'H5 flood extents', 'Check that coastal and fluvial flooding is not attributed to the pluvial model (negative test)'],
-    ['Haruna, Feb 2013', 'Cyclone', 'Atsimo Andrefana', 'H2 headwater parts', 'Secondary validation of extent'],
-  ]
 
   return (
     <div className="space-y-4">
@@ -190,9 +183,7 @@ export function Calibration({ palette }: { palette: Palette }) {
         builds={<>the design storms (Rainfall tab), the flood model setup and the risk computation (Risk tab).</>}
         outcome={<>
           One dataset can calibrate (Cheneso in Mahajanga, itself a model); the UNOSAT and Copernicus EMS satellite maps, Groundsource and the Haruna extent can validate once
-          fluvial and coastal flooding are set aside; the impact catalogues bound the risk metrics from above. Next steps: simulate the
-          seven event groups in the last table, forced with half-hourly GPM IMERG, calibrate on Cheneso, then validate on the others
-          and compare modelled event and average annual impacts with R1 and R2.
+          fluvial and coastal flooding are set aside; the impact catalogues bound the risk metrics from above. The datasets are consolidated in Chapter 2 and the simulation plan is in Chapter 3.
         </>}>
 
         <Card title="Where the datasets lie" subtitle="Satellite flood maps mostly along the east and south-east coast, regional extents in the south-west and south-east, one urban catchment in the north-west, news reports island-wide">
@@ -333,23 +324,12 @@ export function Calibration({ palette }: { palette: Palette }) {
           <Steps items={DRIVER_STEPS} />
         </Card>
 
-        <Card title="Which datasets are useful">
+        <Card title="Summary of all datasets" subtitle="Area covered, metrics, flood drivers and use for the pluvial hazard and the flood risk">
           <TextTable
             caption="Calibration = tuning model parameters against the data; validation = independent check of results"
-            head={['Dataset', 'Content', 'Flood drivers', 'Pluvial hazard', 'Flood risk', 'Usefulness']} rows={usefulness} />
+            head={['Dataset', 'Type', 'Period / events', 'Area covered', 'Metrics', 'Flood drivers', 'Pluvial hazard', 'Flood risk', 'Usefulness']} rows={summary} />
         </Card>
 
-        <Card title="Next steps: events to simulate and ground truth" subtitle="Event runs with the production model, forced by half-hourly GPM IMERG over each catchment">
-          <TextTable caption="Events proposed for calibration and validation"
-            head={['Event', 'Type', 'Area', 'Ground truth', 'Purpose']} rows={nextEvents} />
-          <div className="mt-4" />
-          <Steps items={[
-            { title: '1 · Calibrate on Cheneso (H4)', body: 'Run the Mahajanga catchment with the Cheneso rainfall and tide; tune Manning roughness and curve-number condition to match the H4 extent (critical success index) and depth distribution; check the 10-year design against the study\'s 10-year 24 h storm.' },
-            { title: '2 · Validate hazard', body: 'Freeze parameters; run Batsirai, Emnati, Gezani, Ana, Feb 2015, Ava, Freddy and Haruna. Score the critical success index and false alarms on the UNOSAT and Copernicus EMS maps inside their analysed areas, headwater catchments first, and the hit rate at Groundsource locations (flooded above 15 cm within the footprint); coastal and fluvial parts of H2, H3 and H5 should stay mostly dry in the pluvial model.' },
-            { title: '3 · Validate risk', body: 'Overlay event depths with exposure: people affected and loss per event against R1 and R2 (pluvial share expected well below the totals). Then compare modelled average annual affected population and loss with the R1 means as an upper bound.' },
-            { title: '4 · Data still to obtain', body: 'The Sava flood-prone polygons; the observation date and method of the Haruna map; own Sentinel-1 flood maps for events without UNOSAT or Copernicus EMS products (Ana 2022, Cheneso 2023, Feb 2015 rains); commune-level impacts (DesInventar, BNGRC situation reports) for risk.' },
-          ]} />
-        </Card>
       </Chapter>
 
       <Chapter entry={CHAPTERS[1]}
@@ -360,6 +340,15 @@ export function Calibration({ palette }: { palette: Palette }) {
           must stay below the all-cause totals. It is rebuilt from the sources by scripts/build_validation_events.py.
         </>}>
         <ValidationDataset val={val} palette={palette} />
+      </Chapter>
+
+      <Chapter entry={CHAPTERS[2]}
+        builds={<>the consolidated dataset (Chapter 2), the per-catchment SFINCS pipeline (scripts/build_models.py) and the design-storm run folders (design_runs.prepare_run).</>}
+        outcome={<>
+          Calibrate on Cheneso, freeze the parameters, run the priority catchments of the validation events, score them against the ground truth
+          and the reported impacts, then extend to all catchments of each event and report the scores on this tab.
+        </>}>
+        <Plan runs={val?.runs ?? []} />
       </Chapter>
     </div>
   )
@@ -400,12 +389,12 @@ function ValidationDataset({ val, palette }: { val?: Validation; palette: Palett
   const key = ev.filter((e) => e.role || (e.affected_max_reported ?? 0) >= 100000)
   const row = (e: ValEvent) => [
     e.event, e.date.slice(0, 10), e.type === 'Cyclone' ? 'Cyclone' : 'Flood',
-    v(e.r1_affected), v(e.r2_affected), v(e.di_affected || e.di_victims), v(e.di_districts), v(e.di_houses_destroyed),
+    v(e.r1_affected), v(e.r2_affected), v(e.di_affected || e.di_victims), v(e.rw_affected), v(e.di_districts), v(e.di_houses_destroyed), v(e.rw_houses_flooded),
     e.r1_damage_usd ? fmt(e.r1_damage_usd / 1e6, 0) : '–',
     [e.satellite_source && `${e.satellite_source} ${fmt(e.satellite_flood_km2 ?? 0, 0)} km²`, e.other_hazard_truth, e.groundsource_reports && `${e.groundsource_reports} news reports`].filter(Boolean).join('; ') || '–',
     e.rainfall.replace('GPM IMERG ', ''), e.role ?? '',
   ]
-  const head = ['Event', 'Date', 'Type', 'R1 affected', 'R2 affected', 'R3 affected/victims', 'R3 districts', 'R3 houses destroyed', 'R1 damage (M USD)', 'Hazard ground truth', 'Rainfall', 'Role']
+  const head = ['Event', 'Date', 'Type', 'R1 affected', 'R2 affected', 'R3 affected/victims', 'R4 affected', 'R3 districts', 'R3 houses destroyed', 'R4 houses flooded', 'R1 damage (M USD)', 'Hazard ground truth', 'Rainfall', 'Role']
   return (
     <>
       <Card title="Structure" subtitle="Three linked tables, one per validation scale">
@@ -416,7 +405,7 @@ function ValidationDataset({ val, palette }: { val?: Validation; palette: Palett
           <Stat label="Event × district rows" value={fmt(val.n_district_rows)} sub={`${val.n_districts} districts (DesInventar)`} />
         </div>
         <Steps items={[
-          { title: 'events.csv · per event', body: 'One row per cyclone (IBTrACS name and date) or flood without cyclone: deaths, people affected and damage from R1, R2 and R3 side by side (not merged), GLIDE number and ReliefWeb link, hazard ground truth available, rainfall record (GPM IMERG Final to September 2025, Late afterwards) and proposed role.' },
+          { title: 'events.csv · per event', body: 'One row per cyclone (IBTrACS name and date) or flood without cyclone: deaths, people affected and damage from R1, R2, R3 and R4 (BNGRC figures extracted from ReliefWeb reports, including houses flooded) side by side (not merged), GLIDE number and ReliefWeb link, hazard ground truth available, rainfall record (GPM IMERG Final to September 2025, Late afterwards) and proposed role.' },
           { title: 'event_district.csv · per event and district', body: 'DesInventar impacts per district with OCHA district codes, ready to join with modelled exposure in flooded areas per district. BNGRC figures extracted from ReliefWeb reports are added for the validation events.' },
           { title: 'annual.csv · per year', body: 'Totals per source and year 1998–2025 with coverage flags, for comparing modelled average annual affected population and loss over the years each source covers.' },
         ]} />
@@ -448,6 +437,50 @@ function ValidationDataset({ val, palette }: { val?: Validation; palette: Palett
       <Card title="Events for validation" subtitle="Events with a proposed role or at least 100,000 people affected in any source; the full list is in the download">
         <TextTable caption="Reported impacts per source side by side; hazard ground truth and rainfall record per event" head={head} rows={key.map(row)} />
         <DataTable name="all events (table)" caption="All events of the consolidated dataset" head={head} rows={ev.map(row)} />
+      </Card>
+    </>
+  )
+}
+
+function Plan({ runs }: { runs: Run[] }) {
+  const rows = runs.map((r) => [
+    r.event, r.purpose, `${r.window_start.slice(5)} → ${r.window_end}`, r.rainfall.replace('GPM IMERG ', 'IMERG '),
+    `${r.n_catchments} (${fmt(r.area_km2)} km²)`, `${r.priority}: ${r.n_priority} (${fmt(r.priority_km2)} km²)`, r.ground_truth, r.metrics,
+  ])
+  return (
+    <>
+      <Card title="Run sheet" subtitle="One simulation per event; catchments = model catchments intersecting the ground truth; run the priority subset first">
+        <TextTable caption="Catchment ids (all, headwater, priority) are in event_runs.csv"
+          head={['Event', 'Purpose', 'Window (UTC)', 'Rainfall', 'Catchments (all)', 'Priority subset', 'Ground truth', 'Metrics']} rows={rows} />
+        <p className="mt-3 text-sm text-ink-2">
+          Download: <a className="text-accent underline underline-offset-2" href={dataUrl('validation/event_runs.csv')} download>event_runs.csv</a> (columns
+          catchment_ids, headwater_ids, priority_ids are space-separated basin ids for <code>build_models.py --basin-ids</code>).
+        </p>
+      </Card>
+
+      <Card title="Steps" subtitle="In order; each step names its inputs and outputs">
+        <Steps items={[
+          { title: '0 · Event forcing (to build)', body: <>A script <code>scripts/run_events.py</code> that reads <code>event_runs.csv</code>, fetches half-hourly GPM IMERG over the window (Final V07 to September 2025, Late afterwards; OPeNDAP route already used by <code>nontc_duration_check.py</code>), computes the catchment-mean hyetograph, applies the gauge-bias factor where the GPM validation found one (east coast), and writes it with <code>design_runs.prepare_run</code> plus one dry day of drain time. Antecedent condition: wet (curve number AMC III) for cyclones, average for the 2015 rains.</> },
+          { title: '1 · Build the models', body: <><code>python scripts/build_models.py --basin-ids &lt;priority_ids&gt; --steps inputs setup --workers 8</code> for each event (models are reused across events sharing catchments).</> },
+          { title: '2 · Calibrate on Cheneso 2023', body: <>Run catchment 1070036890 with the Cheneso rainfall (18–29 Jan 2023) and the Mahajanga tide as the downstream water level. Vary Manning roughness (land 0.03–0.10, channels 0.02–0.05) and antecedent condition (AMC II / III); keep the set that best matches the H4 extent above 15 cm (critical success index) and depth distribution. Also run the study's 10-year 24 h storm against our 10-year design depth.</> },
+          { title: '3 · Validate the hazard', body: <>Freeze the parameters. Run Batsirai, Emnati, Gezani, Ana, Feb–Mar 2015 and Freddy on the priority catchments, then all catchments. Score against H5/H6 inside the analysed areas (maximum depth up to the image date, flooded above 15 cm, permanent water and rice paddies masked), against Groundsource locations (hit rate) and against the H2 headwater polygons. Ava and Freddy are negative tests: coastal and fluvial flooding should mostly not be reproduced.</> },
+          { title: '4 · Validate event impacts', body: <>Overlay event depths with exposure: people and buildings above 15 cm and losses per district. Compare buildings flooded with R4 houses flooded (Batsirai 7,098, Emnati 5,826, Gezani 14,330) and people in water with R1–R4 affected (range), and per district with DesInventar.</> },
+          { title: '5 · Validate average annual figures', body: <>Compute the modelled average annual affected population and loss from the design return periods and compare them with the yearly totals over 2000–2018: modelled values must lie below the all-cause totals (R1 about 270,000 people a year, R3 about 114,000–151,000).</> },
+          { title: '6 · Report', body: 'Write scores per event and catchment back to the consolidated dataset and publish them in a results chapter of this tab.' },
+        ]} />
+      </Card>
+
+      <Card title="Acceptance criteria" subtitle="Indicative targets from large-scale flood model validation; to be confirmed after the Cheneso calibration">
+        <TextTable caption="Flooded = water depth above 15 cm; scores computed only where the ground truth observed (analysed areas)"
+          head={['Check', 'Metric', 'Target']} rows={[
+            ['Extent vs satellite / H4', 'Critical success index', '≥ 0.5 (headwater, urban); ≥ 0.3 elsewhere'],
+            ['Extent vs satellite / H4', 'Bias (modelled / observed flooded area)', '0.8 – 1.25'],
+            ['Depth vs H4', 'Median absolute error in the wet area', '< 0.2 m'],
+            ['Groundsource locations', 'Hit rate', '≥ 0.7'],
+            ['Negative tests (Ava, Freddy)', 'Share of coastal / fluvial observed flooding reproduced', 'Low (< 0.3)'],
+            ['Event impacts', 'Modelled buildings / people vs reported', 'Within a factor 2 of the reported range, below all-cause totals'],
+            ['Average annual figures', 'Modelled vs yearly totals 2000–2018', 'Below R1; same order of magnitude as the rain-driven share'],
+          ]} />
       </Card>
     </>
   )
