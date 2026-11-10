@@ -30,9 +30,22 @@ const rapidRows = (r: Inventory['rapid'], source: string) => (r ?? []).filter((x
 ])
 const RAPID_HEAD = ['Event', 'Image dates', 'Sensors', 'Areas', 'Analysed (km²)', 'Flooded (km²)', 'Coastal / fluvial-prone / headwater']
 
-const CHAPTERS: ChapterEntry[] = [
+const CHAPTERS_RAW: ChapterEntry[] = [
+  { id: 'consolidated', number: 2, title: 'Consolidated validation dataset', summary: 'One table of events with reported impacts from every source side by side, impacts per district, and yearly totals: the reference against which modelled event impacts and average annual figures are compared.' },
   { id: 'inventory', number: 1, title: 'Inventory of existing calibration and validation datasets', summary: 'What observed and modelled flood data exist for Madagascar, where they lie, what they can and cannot show about pluvial flooding, and which events to simulate next.' },
 ]
+
+const CHAPTERS = [...CHAPTERS_RAW].sort((a, b) => a.number - b.number)
+
+interface ValEvent {
+  event: string; date: string; type: string; glide: string | null; r1_deaths: number | null; r1_affected: number | null
+  r1_damage_usd: number | null; r2_affected: number | null; di_districts: number | null; di_affected: number | null
+  di_victims: number | null; di_houses_destroyed: number | null; reliefweb: string | null; groundsource_reports: number | null
+  satellite_flood_km2: number | null; satellite_source: string | null; other_hazard_truth: string | null; rainfall: string
+  role: string | null; affected_max_reported: number | null
+}
+interface ValAnnual { year: number; r1_affected: number | null; r1_damage_est_usd2020: number | null; di_affected: number | null; di_victims: number | null; di_houses_destroyed: number | null; r1_covered: boolean; di_covered: boolean }
+interface Validation { events: ValEvent[]; annual: ValAnnual[]; n_district_rows: number; n_districts: number }
 
 const nYears = ANNUAL_LOSSES.length
 const meanAffected = ANNUAL_LOSSES.reduce((s, r) => s + r[1], 0) / nYears
@@ -141,6 +154,8 @@ function lossChart(p: Palette): EChartsOption {
 export function Calibration({ palette }: { palette: Palette }) {
   const [inv, setInv] = useState<Inventory>()
   useEffect(() => { fetch(dataUrl('calibration_inventory.json')).then((r) => r.json()).then(setInv) }, [])
+  const [val, setVal] = useState<Validation>()
+  useEffect(() => { fetch(dataUrl('validation_events.json')).then((r) => r.json()).then(setVal) }, [])
   const h = inv?.haruna, v = inv?.v7v, m = inv?.mahajanga, g = inv?.groundsource
   const n = (x: number | undefined, d = 0) => (x === undefined ? '…' : fmt(x, d))
 
@@ -152,6 +167,8 @@ export function Calibration({ palette }: { palette: Palette }) {
     ['H6 Copernicus EMS (Fytia, Gezani 2026)', 'Very-high-resolution flood delineation', 'Mixed; urban Antananarivo', 'Validation in town (Antananarivo) and on the east coast', 'Event exposure check', 'High, but small areas'],
     ['H4 Cheneso 2023, Mahajanga (modelled)', '1 m depth from a detailed urban drainage model', 'Pluvial with tidal boundary', 'Calibration benchmark (extent and depth)', 'Event exposure check', 'High, but local and modelled'],
     ['R1 Cyclone impact catalogue 2000–2022', 'Deaths, affected, damage per cyclone and year', 'All cyclone causes', '–', 'Upper bound for average annual affected population and loss; event order of magnitude', 'Medium'],
+    ['R3 DesInventar', 'Impacts per event and district, 1982–2024', 'Cyclone (all causes) and flood records', '–', 'Validation of event impacts per district; yearly totals', 'High (district detail)'],
+    ['R4 ReliefWeb', 'Reports per disaster with BNGRC figures', 'Narrative', '–', 'Event and district figures for recent events (manual extraction)', 'Medium'],
     ['R2 Flood events 1985–2022', 'Deaths and affected per flood event', 'Flooding (21 cyclone events, 1 heavy rain)', '–', 'People affected per event (flood only)', 'Medium'],
   ]
 
@@ -287,6 +304,20 @@ export function Calibration({ palette }: { palette: Palette }) {
           ['Limitations', 'No economic damage; affected counts differ from R1 for the same storms (other sources and definitions).'],
         ]} />
 
+        <Dataset id="R3" title="DesInventar Madagascar" kind="National disaster loss database, impacts per event and district, 1982–2024" rows={[
+          ['Content', '2,402 records, of which 1,017 cyclone and 25 flood records (2005–2016): deaths, people affected and victims, houses destroyed and damaged, hectares of crops. About 70% of cyclone records give the district (none the commune); economic damage only in yearly records per region.'],
+          ['Source', 'DesInventar Sendai (UNDRR), Madagascar database fed by BNGRC and CERED; full export with district boundaries (NDMO/OCHA).'],
+          ['Flood drivers', 'Cyclone records mix wind and flooding; flood records separate flooding, including the late February – March 2015 rains in Antananarivo (about 90,000 affected, no cyclone).'],
+          ['Limitations', 'No storm names (131 records carry a GLIDE code; the rest are matched by month); sparse after 2018; a block of July 2018 records with no storm that month is left out; affected and victims are used inconsistently.'],
+        ]} />
+
+        <Dataset id="R4" title="ReliefWeb disasters and reports" kind="Humanitarian reports per disaster, 1997–2026" rows={[
+          ['Content', '62 disasters for Madagascar, 53 cyclones or floods, each with its GLIDE number and from 30 to 100 reports: OCHA flash updates, BNGRC situation reports, IFRC DREF reports, UNICEF situation reports, IOM displacement tracking, multi-sector assessments.'],
+          ['Source', 'ReliefWeb (OCHA). The list and links are in the consolidated dataset; the API needs an approved application name.'],
+          ['Flood drivers', 'Narrative; floods without cyclone appear as separate disasters (January 2003, March 2005, January 2020, January 2022).'],
+          ['Limitations', 'Reports, not data: district and commune figures sit in PDFs and are extracted by hand, so only for the validation events (Batsirai, Emnati, Ana, Cheneso, Gezani).'],
+        ]} />
+
         <Card title="Challenges" subtitle="Why none of the datasets can be used as it is">
           <dl className="grid gap-3 md:grid-cols-2">
             {CHALLENGES.map(([t, d]) => (
@@ -320,6 +351,104 @@ export function Calibration({ palette }: { palette: Palette }) {
           ]} />
         </Card>
       </Chapter>
+
+      <Chapter entry={CHAPTERS[1]}
+        builds={<>the risk datasets R1–R4 and the hazard ground truth of Chapter 1.</>}
+        outcome={<>
+          The consolidated dataset is the reference for risk validation: per event, modelled people affected and losses are compared
+          with the range of reported values (not one number); per district, with DesInventar; per year, modelled average annual figures
+          must stay below the all-cause totals. It is rebuilt from the sources by scripts/build_validation_events.py.
+        </>}>
+        <ValidationDataset val={val} palette={palette} />
+      </Chapter>
     </div>
+  )
+}
+
+function annualChart(p: Palette, an: ValAnnual[]): EChartsOption {
+  const axis = {
+    axisLabel: { color: p['text-secondary'] }, axisLine: { lineStyle: { color: p.axis } },
+    axisTick: { show: false }, splitLine: { lineStyle: { color: p.grid } }, nameTextStyle: { color: p['text-secondary'] },
+  }
+  const ser = (name: string, key: keyof ValAnnual, color: string, cov: keyof ValAnnual) => ({
+    name, type: 'bar' as const, itemStyle: { color, borderRadius: [3, 3, 0, 0] },
+    data: an.map((r) => (r[cov] ? +(((r[key] as number) ?? 0) / 1e6).toFixed(3) : null)),
+  })
+  return {
+    grid: { left: 64, right: 24, top: 40, bottom: 36 },
+    legend: { top: 0, textStyle: { color: p['text-secondary'] } },
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, valueFormatter: (v) => (v == null ? 'not covered' : `${fmt(Number(v), 2)} M`) },
+    xAxis: { type: 'category', data: an.map((r) => String(r.year)), ...axis, splitLine: { show: false } },
+    yAxis: { type: 'value', name: 'People (millions)', ...axis },
+    series: [
+      ser('R1 people affected (all cyclone causes)', 'r1_affected', p['cat-1'], 'r1_covered'),
+      ser('R3 DesInventar affected', 'di_affected', p['cat-2'], 'di_covered'),
+      ser('R3 DesInventar victims', 'di_victims', p['cat-3'], 'di_covered'),
+    ],
+  }
+}
+
+function ValidationDataset({ val, palette }: { val?: Validation; palette: Palette }) {
+  if (!val) return <Card><Info>Loading…</Info></Card>
+  const ev = val.events
+  const nSrc = (e: ValEvent) => [e.r1_affected ?? e.r1_deaths, e.r2_affected, e.di_affected || e.di_victims].filter((x) => x != null && x !== 0).length
+  const multi = ev.filter((e) => nSrc(e) >= 2).length
+  const withHaz = ev.filter((e) => e.satellite_flood_km2 || e.other_hazard_truth || (e.groundsource_reports ?? 0) >= 10).length
+  const cmp = val.annual.filter((r) => r.year >= 2000 && r.year <= 2018)
+  const mean = (k: keyof ValAnnual) => cmp.reduce((s, r) => s + ((r[k] as number) ?? 0), 0) / cmp.length
+  const v = (x: number | null | undefined, d = 0) => (x == null || x === 0 ? '–' : fmt(x, d))
+  const key = ev.filter((e) => e.role || (e.affected_max_reported ?? 0) >= 100000)
+  const row = (e: ValEvent) => [
+    e.event, e.date.slice(0, 10), e.type === 'Cyclone' ? 'Cyclone' : 'Flood',
+    v(e.r1_affected), v(e.r2_affected), v(e.di_affected || e.di_victims), v(e.di_districts), v(e.di_houses_destroyed),
+    e.r1_damage_usd ? fmt(e.r1_damage_usd / 1e6, 0) : '–',
+    [e.satellite_source && `${e.satellite_source} ${fmt(e.satellite_flood_km2 ?? 0, 0)} km²`, e.other_hazard_truth, e.groundsource_reports && `${e.groundsource_reports} news reports`].filter(Boolean).join('; ') || '–',
+    e.rainfall.replace('GPM IMERG ', ''), e.role ?? '',
+  ]
+  const head = ['Event', 'Date', 'Type', 'R1 affected', 'R2 affected', 'R3 affected/victims', 'R3 districts', 'R3 houses destroyed', 'R1 damage (M USD)', 'Hazard ground truth', 'Rainfall', 'Role']
+  return (
+    <>
+      <Card title="Structure" subtitle="Three linked tables, one per validation scale">
+        <div className="grid gap-3 sm:grid-cols-4">
+          <Stat label="Events" value={fmt(ev.length)} sub={`${ev.filter((e) => e.type !== 'Cyclone').length} floods without cyclone`} hero />
+          <Stat label="Events with ≥ 2 impact sources" value={fmt(multi)} sub="R1, R2, R3 compared" />
+          <Stat label="Events with hazard ground truth" value={fmt(withHaz)} sub="satellite map, model or ≥ 10 news reports" />
+          <Stat label="Event × district rows" value={fmt(val.n_district_rows)} sub={`${val.n_districts} districts (DesInventar)`} />
+        </div>
+        <Steps items={[
+          { title: 'events.csv · per event', body: 'One row per cyclone (IBTrACS name and date) or flood without cyclone: deaths, people affected and damage from R1, R2 and R3 side by side (not merged), GLIDE number and ReliefWeb link, hazard ground truth available, rainfall record (GPM IMERG Final to September 2025, Late afterwards) and proposed role.' },
+          { title: 'event_district.csv · per event and district', body: 'DesInventar impacts per district with OCHA district codes, ready to join with modelled exposure in flooded areas per district. BNGRC figures extracted from ReliefWeb reports are added for the validation events.' },
+          { title: 'annual.csv · per year', body: 'Totals per source and year 1998–2025 with coverage flags, for comparing modelled average annual affected population and loss over the years each source covers.' },
+        ]} />
+        <p className="mt-3 text-sm text-ink-2">
+          Download:{' '}
+          {['events.csv', 'event_district.csv', 'annual.csv'].map((f, i) => (
+            <span key={f}>{i > 0 && ' · '}<a className="text-accent underline underline-offset-2" href={dataUrl(`validation/${f}`)} download>{f}</a></span>
+          ))}
+        </p>
+      </Card>
+
+      <Card title="Reference values for average annual impact" subtitle="Common period 2000–2018 (both R1 and DesInventar cover it)">
+        <div className="grid gap-3 sm:grid-cols-4">
+          <Stat label="R1 people affected / year" value={fmt(Math.round(mean('r1_affected') / 100) * 100)} sub="all cyclone causes" />
+          <Stat label="R3 people affected / year" value={fmt(Math.round(mean('di_affected') / 100) * 100)} sub="DesInventar, cyclones and floods" />
+          <Stat label="R3 victims / year" value={fmt(Math.round(mean('di_victims') / 100) * 100)} sub="DesInventar 'damnificados'" />
+          <Stat label="R3 houses destroyed / year" value={fmt(Math.round(mean('di_houses_destroyed') / 100) * 100)} sub="DesInventar" />
+        </div>
+        <div className="mt-3">
+          <Chart option={annualChart(palette, val.annual)} height={340} label="Bars per year of people affected from R1 and DesInventar affected and victims, 1998 to 2025" />
+        </div>
+        <Info>
+          Sources disagree by a factor of two to three on the same years (definitions of affected, victims and missing districts), so modelled
+          values are compared with the range. Pluvial flooding is one part of these impacts: the model must come out below the all-cause totals,
+          and close to them only for rain-driven events such as Ana 2022 or February–March 2015.
+        </Info>
+      </Card>
+
+      <Card title="Events for validation" subtitle="Events with a proposed role or at least 100,000 people affected in any source; the full list is in the download">
+        <TextTable caption="Reported impacts per source side by side; hazard ground truth and rainfall record per event" head={head} rows={key.map(row)} />
+        <DataTable name="all events (table)" caption="All events of the consolidated dataset" head={head} rows={ev.map(row)} />
+      </Card>
+    </>
   )
 }

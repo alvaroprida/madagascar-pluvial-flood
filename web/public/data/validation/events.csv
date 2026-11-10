@@ -1,0 +1,88 @@
+event,date,type,name,glide,r1_name,r1_deaths,r1_affected,r1_damage_usd,r1_flood_documented,r2_name,r2_deaths,r2_affected,r2_source,di_districts,di_deaths,di_affected,di_victims,di_houses_destroyed,di_houses_damaged,reliefweb,groundsource_reports,satellite_flood_km2,satellite_source,other_hazard_truth,rainfall,role,affected_max_reported
+Domoina 1987,1987-01-01,Cyclone,,,,,,,,Cyclone Domoina,2.0,40220.0,DFO (2018),,,,,,,,,,,,none (pre-GPM),,40220.0
+Geralda 1994,1994-02-01,Cyclone,,,,,,,,Cyclone Geralda,200.0,50000.0,DFO (2018),,,,,,,,,,,,none (pre-GPM),,50000.0
+Gretelle 1997,1997-01-24,Cyclone,Gretelle,ST-1997-000013-MDG,,,,,,Cyclone Gretelle,140.0,600000.0,UNDP et al. (2012),6.0,126.0,21293.0,21062.0,0.0,0.0,https://reliefweb.int/disaster/st-1997-000013-mdg,,,,,none (pre-GPM),,600000.0
+Eline 2000,2000-02-17,Cyclone,Eline,,ELINE (LEON),64.0,500000.0,9000000.0,False,Cyclone Eline and Gloria,200.0,800000.0,DFO (2018),15.0,7.0,165.0,164.0,0.0,148.0,,,,,,GPM IMERG Final,,800000.0
+Gloria 2000,2000-03-01,Cyclone,Gloria,ST-2000-000107-MDG,GLORIA,137.0,237000.0,,True,,,,,42.0,240.0,24171.0,24161.0,0.0,2819.0,https://reliefweb.int/disaster/st-2000-000107-mdg,,,,,GPM IMERG Final,,237000.0
+Hudah 2000,2000-04-02,Cyclone,Hudah,ST-2000-000178-MDG,HUDAH,114.0,300000.0,15700000.0,False,,,,,,,,,,,https://reliefweb.int/disaster/st-2000-000178-mdg,,,,,GPM IMERG Final,,300000.0
+Dera 2001,2001-03-06,Cyclone,Dera,,,,,,,,,,,17.0,9.0,3676.0,3676.0,0.0,420.0,,,,,,GPM IMERG Final,,3676.0
+Cyprien 2002,2002-01-02,Cyclone,Cyprien,ST-2002-000004-MDG,CYPRIEN,,1900.0,181000.0,False,,,,,,,,,,,https://reliefweb.int/disaster/st-2002-000004-mdg,,,,,GPM IMERG Final,,1900.0
+Hary 2002,2002-03-10,Cyclone,Hary,ST-2002-000146-MDG,HARY,3.0,,,False,,,,,,,,,,,https://reliefweb.int/disaster/st-2002-000146-mdg,,,,,GPM IMERG Final,,
+Kesiny 2002,2002-05-09,Cyclone,Kesiny,ST-2002-000281-MDG,KESINY,213.0,526200.0,,True,Cyclone Kesiny,33.0,526200.0,"UNDP et al. (2012), DFO (2018)",5.0,34.0,22325.0,22324.0,0.0,2121.0,https://reliefweb.int/disaster/st-2002-000281-mdg,,,,,GPM IMERG Final,,526200.0
+Delfina 2002,2002-12-30,Cyclone,Delfina,,,,,,,Storm Delfina,16.0,25000.0,DFO (2018),,,,,,,,,,,,GPM IMERG Final,,25000.0
+Manou 2003,2003-05-09,Cyclone,Manou,ST-2003-000218-MDG,MANOU,89.0,162086.0,11310000.0,False,Cyclone Manou,68.0,47000.0,DFO (2018),2.0,70.0,114566.0,114480.0,0.0,7563.0,https://reliefweb.int/disaster/st-2003-000218-mdg,,,,,GPM IMERG Final,,162086.0
+Elita 2004,2004-01-28,Cyclone,Elita,ST-2004-000029-MDG,ELITA,33.0,56000.0,,False,,,,,39.0,29.0,18305.0,18198.0,9505.0,0.0,https://reliefweb.int/disaster/st-2004-000029-mdg,,,,,GPM IMERG Final,,56000.0
+Gafilo 2004,2004-03-07,Cyclone,Gafilo,,GAFILO,363.0,988000.0,250000000.0,False,Cyclone Gafilo,363.0,988139.0,"UNDP et al. (2012), DFO (2018)",77.0,236.0,277355.0,276464.0,105040.0,0.0,,,,,,GPM IMERG Final,,988139.0
+Ernest 2005,2005-01-23,Cyclone,Ernest,,ERNEST,78.0,32200.0,,False,Cyclone Ernest,17.0,8000.0,DFO (2018),16.0,35.0,30273.0,30273.0,0.0,7734.0,,,,,,GPM IMERG Final,,32200.0
+Felapi 2005,2005-01-28,Cyclone,Felapi,,FELAPI,39.0,,,False,,,,,,,,,,,,,,,,GPM IMERG Final,,
+Floods Mar 2005,2005-03-01,Flood (no cyclone),,FL-2005-000038-MDG,,,,,,Heavy rains,25.0,9200.0,DFO (2018),4.0,14.0,59983.0,77006.0,0.0,0.0,https://reliefweb.int/disaster/fl-2005-000038-mdg,,,,,GPM IMERG Final,,77006.0
+Boloetse 2006,2006-01-28,Cyclone,Boloetse,,BOLOETSE,6.0,6537.0,,True,,,,,8.0,7.0,6538.0,6537.0,0.0,39.0,,,,,,GPM IMERG Final,,6538.0
+Bondo 2006,2006-12-25,Cyclone,Bondo,TC-2006-000193-MDG,BONDO,11.0,20000.0,,False,,,,,10.0,6.0,20014.0,20013.0,0.0,345.0,https://reliefweb.int/disaster/tc-2006-000193-mdg,,,,,GPM IMERG Final,,20014.0
+Clovis 2007,2007-01-03,Cyclone,Clovis,TC-2007-000006-MDG,CLOVIS,4.0,13465.0,,True,,,,,,,,,,,https://reliefweb.int/disaster/tc-2007-000006-mdg,8.0,,,,GPM IMERG Final,,13465.0
+Favio 2007,2007-02-19,Cyclone,Favio,TC-2007-000028-MDG,FAVIO,3.0,33000.0,,True,,,,,,,,,,,https://reliefweb.int/disaster/tc-2007-000028-mdg,,,,,GPM IMERG Final,,33000.0
+Indlala 2007,2007-03-15,Cyclone,Indlala,TC-2007-000034-MDG,INDLALA,150.0,215198.0,240000000.0,False,Cyclone Indlala,180.0,2000000.0,UNDP et al. (2012),27.0,150.0,188457.0,188331.0,54485.0,0.0,https://reliefweb.int/disaster/tc-2007-000034-mdg,,,,,GPM IMERG Final,,2000000.0
+Jaya 2007,2007-04-03,Cyclone,Jaya,,JAYA,3.0,8015.0,,False,,,,,3.0,1.0,8017.0,8015.0,3796.0,0.0,,,,,,GPM IMERG Final,,8017.0
+Celina 2007,2007-12-23,Cyclone,Celina,,,,,,,,,,,,,,,,,,2.0,,,,GPM IMERG Final,,
+Fame 2008,2008-01-27,Cyclone,Fame,,FAME,11.0,37126.0,333000000.0,False,,,,,,,,,,,,,,,,GPM IMERG Final,,37126.0
+Ivan 2008,2008-02-17,Cyclone,Ivan,TC-2008-000023-MDG,IVAN,93.0,332391.0,,True,Cyclone Ivan,260.0,525000.0,UNDP et al. (2012),54.0,93.0,332920.0,332171.0,135508.0,0.0,https://reliefweb.int/disaster/tc-2008-000023-mdg,10.0,,,,GPM IMERG Final,,525000.0
+Jokwe 2008,2008-03-06,Cyclone,Jokwe,,JOKWE,,400.0,,False,,,,,15.0,13.0,11915.0,11913.0,1236.0,0.0,,,,,,GPM IMERG Final,,11915.0
+Floods Aug 2008 (Antananarivo),2008-08-01,Flood (no cyclone),,,,,,,,,,,,4.0,0.0,7800.0,7800.0,400.0,0.0,,,,,,GPM IMERG Final,,7800.0
+Fanele 2009,2009-01-21,Cyclone,Fanele,TC-2009-000019-MDG,FANELE,12.0,58493.0,,False,Cyclone Fanele,28.0,114537.0,UNDP et al. (2012),,,,,,,https://reliefweb.int/disaster/tc-2009-000019-mdg,,,,,GPM IMERG Final,,114537.0
+Izilda 2009,2009-03-26,Cyclone,Izilda,,IZILDA,,2700.0,,True,,,,,,,,,,,,,,,,GPM IMERG Final,,2700.0
+Jade 2009,2009-04-06,Cyclone,Jade,TC-2009-000073-MDG,JADE,15.0,64918.0,,True,,,,,,,,,,,https://reliefweb.int/disaster/tc-2009-000073-mdg,,,,,GPM IMERG Final,,64918.0
+Fami 2010,2010-02-02,Cyclone,Fami,,FAMI,,,,False,,,,,18.0,12.0,58422.0,58389.0,10100.0,0.0,,4.0,,,,GPM IMERG Final,,58422.0
+Hubert 2010,2010-03-10,Cyclone,Hubert,SS-2010-000053-MDG,HUBERT,100.0,192132.0,,True,Storm Hubert,86.0,195800.0,UNDP et al. (2012),17.0,85.0,179726.0,179585.0,13845.0,0.0,https://reliefweb.int/disaster/ss-2010-000053-mdg,7.0,,,,GPM IMERG Final,,195800.0
+Joel 2010,2010-05-27,Cyclone,Joel,,JOEL,18.0,542.0,,False,,,,,,,,,,,,,,,,GPM IMERG Final,,542.0
+Bingiza 2011,2011-02-14,Cyclone,Bingiza,TC-2011-000023-MDG,BINGIZA,35.0,216522.0,,True,Cyclone Bingiza,35.0,267000.0,UNDP et al. (2012),28.0,20.0,100170.0,100106.0,7406.0,16545.0,https://reliefweb.int/disaster/tc-2011-000023-mdg,1.0,,,,GPM IMERG Final,,267000.0
+Chanda 2012,2012-01-09,Cyclone,Chanda,,CHANDA,1.0,,,True,,,,,,,,,,,,,,,,GPM IMERG Final,,
+Funso 2012,2012-01-18,Cyclone,Funso,,,,,,,,,,,,,,,,,,1.0,,,,GPM IMERG Final,,
+Giovanna 2012,2012-02-14,Cyclone,Giovanna,TC-2012-000020-MDG,GIOVANNA,35.0,246869.0,,False,,,,,41.0,35.0,247153.0,246869.0,44159.0,28791.0,https://reliefweb.int/disaster/tc-2012-000020-mdg,5.0,,,,GPM IMERG Final,,247153.0
+Irina 2012,2012-02-26,Cyclone,Irina,TC-2012-000036-MDG,IRINA,77.0,85335.0,,True,Cyclone Irina,112.0,332000.0,UNDP et al. (2012),26.0,77.0,85350.0,85335.0,1372.0,7203.0,https://reliefweb.int/disaster/tc-2012-000036-mdg,1.0,,,,GPM IMERG Final,,332000.0
+Felleng 2013,2013-01-31,Cyclone,Felleng,FL-2013-000012-SYC,FELLENG,12.0,6643.0,,True,,,,,16.0,10.0,6815.0,6815.0,171.0,2215.0,https://reliefweb.int/disaster/fl-2013-000012-syc,1.0,,,,GPM IMERG Final,,6815.0
+Haruna 2013,2013-02-22,Cyclone,Haruna,TC-2013-000022-MDG,HARUNA,26.0,40154.0,,False,,,,,10.0,26.0,66943.0,66845.0,5167.0,34669.0,https://reliefweb.int/disaster/tc-2013-000022-mdg,2.0,,,CPGU flooded zones,GPM IMERG Final,"Validation (hazard, secondary)",66943.0
+Deliwe 2014,2014-01-15,Cyclone,Deliwe,,DELIWE,2.0,,,True,,,,,,,,,,,,1.0,,,,GPM IMERG Final,,
+Hellen 2014,2014-03-31,Cyclone,Hellen,TC-2014-000043-MDG,HELLEN,3.0,2141.0,,True,,,,,8.0,3.0,2141.0,2141.0,437.0,174.0,https://reliefweb.int/disaster/tc-2014-000043-mdg,3.0,,,,GPM IMERG Final,,2141.0
+Bansi 2015,2015-01-10,Cyclone,Bansi,,,,,,,,,,,,,,,,,,1.0,,,,GPM IMERG Final,,
+Chedza 2015,2015-01-16,Cyclone,Chedza,TC-2015-000004-MDG,CHEDZA,50.0,130857.0,40000000.0,True,Cyclone Chedza,0.0,25000.0,DFO (2018),,,,,,,https://reliefweb.int/disaster/tc-2015-000004-mdg,12.0,,,,GPM IMERG Final,,130857.0
+Fundi 2015,2015-02-06,Cyclone,Fundi,,FUNDI,,,,True,Cyclones Fundi,0.0,20000.0,DFO (2018),55.0,80.0,174306.0,174270.0,4400.0,111.0,,,,,,GPM IMERG Final,,174306.0
+Heavy rains Feb–Mar 2015 (Antananarivo),2015-02-25,Flood (no cyclone),,,,,,,,,,,,11.0,12.0,92593.0,92593.0,828.0,0.0,,,,,,GPM IMERG Final,Validation (non-cyclone),92593.0
+Haliba 2015,2015-03-07,Cyclone,Haliba,,,,,,,,,,,5.0,6.0,30211.0,30179.0,1686.0,715.0,,8.0,,,,GPM IMERG Final,,30211.0
+Floods Feb 2016,2016-02-01,Flood (no cyclone),,,,,,,,,,,,5.0,6.0,0.0,31208.0,34.0,7701.0,,,,,,GPM IMERG Final,,31208.0
+Daya 2016,2016-02-08,Cyclone,Daya,,,,,,,,,,,,,,,,,,2.0,,,,GPM IMERG Final,,
+Enawo 2017,2017-03-07,Cyclone,Enawo,TC-2017-000023-MDG,ENAWO,96.0,430000.0,415000000.0,True,Cyclone Enawo,81.0,434000.0,Croix rouge (2017),55.0,81.0,0.0,429024.0,40002.0,68496.0,https://reliefweb.int/disaster/tc-2017-000023-mdg,22.0,234.3,UNOSAT,,GPM IMERG Final,,434000.0
+Ava 2018,2018-01-05,Cyclone,Ava,TC-2018-000001-MDG,AVA,73.0,123244.0,4620000.0,True,Cyclone Ava,6.0,15000.0,DFO (2018),,,,,,,https://reliefweb.int/disaster/tc-2018-000001-mdg,19.0,667.7,UNOSAT,,GPM IMERG Final,Negative test (coastal/fluvial),123244.0
+Dumazile 2018,2018-03-04,Cyclone,Dumazile,,DUMAZILE,,,,True,,,,,,,,,,,,6.0,,,,GPM IMERG Final,,
+Eliakim 2018,2018-03-16,Cyclone,Eliakim,,ELIAKIM,21.0,50872.0,3850000.0,False,Cyclone Eliakim,17.0,6000.0,DFO (2018),,,,,,,,3.0,,,,GPM IMERG Final,,50872.0
+Eketsang 2019,2019-01-24,Cyclone,Eketsang,,EKETSANG,27.0,9000.0,,True,,,,,,,,,,,,,,,,GPM IMERG Final,,9000.0
+Idai 2019,2019-03-10,Cyclone,Idai,TC-2019-000021-MOZ,IDAI,1.0,1100.0,,True,,,,,,,,,,,https://reliefweb.int/disaster/tc-2019-000021-moz,,,,,GPM IMERG Final,,1100.0
+Kenneth 2019,2019-04-23,Cyclone,Kenneth,TC-2019-000038-MOZ,,,,,,,,,,,,,,,,https://reliefweb.int/disaster/tc-2019-000038-moz,4.0,,,,GPM IMERG Final,,
+Belna 2019,2019-12-09,Cyclone,Belna,,BELNA,4.0,1742.0,25000000.0,False,,,,,,,,,,,,3.0,,,,GPM IMERG Final,,1742.0
+Calvinia 2019,2019-12-25,Cyclone,Calvinia,,,,,,,,,,,,,,,,,,3.0,,,,GPM IMERG Final,,
+Diane 2020,2020-01-22,Cyclone,Diane,,DIANE,31.0,107000.0,,True,,,,,,,,,,,,28.0,9475.0,UNOSAT,,GPM IMERG Final,,107000.0
+Francisco 2020,2020-02-15,Cyclone,Francisco,,FRANCISCO,1.0,,,True,,,,,,,,,,,,8.0,,,,GPM IMERG Final,,
+Herold 2020,2020-03-14,Cyclone,Herold,,HEROLD,5.0,3200.0,,True,,,,,,,,,,,,5.0,,,,GPM IMERG Final,,3200.0
+Eloise 2021,2021-01-19,Cyclone,Eloise,TC-2021-000008-MOZ,ELOISE,1.0,,,False,,,,,,,,,,,https://reliefweb.int/disaster/tc-2021-000008-moz,1.0,,,,GPM IMERG Final,,
+Floods Jan 2022 (Antananarivo),2022-01-17,Flood (no cyclone),,ST-2022-000138-MDG,,,,,,,,,,,,,,,,https://reliefweb.int/disaster/st-2022-000138-mdg,,,,,GPM IMERG Final,"Validation (risk, with Ana)",
+Ana 2022,2022-01-22,Cyclone,Ana,ST-2022-000088-MOZ,ANA,58.0,960000.0,658000000.0,True,,,,,,,,,,,https://reliefweb.int/disaster/st-2022-000088-moz,44.0,,,,GPM IMERG Final,"Validation (risk, hit rate)",960000.0
+Batsirai 2022,2022-02-05,Cyclone,Batsirai,TC-2022-000160-MDG,BATSIRAI,123.0,,,True,Cyclone Batsirai,80.0,112000.0,Croix rouge (2022),,,,,,,https://reliefweb.int/disaster/tc-2022-000160-mdg,27.0,671.9,UNOSAT,,GPM IMERG Final,"Validation (hazard, risk)",112000.0
+Cliff 2022,2022-02-13,Cyclone,Cliff,,,,,,,,,,,,,,,,,,14.0,,,,GPM IMERG Final,,
+Dumako 2022,2022-02-15,Cyclone,Dumako,,DUMAKO,14.0,,,False,,,,,,,,,,,,2.0,,,,GPM IMERG Final,,
+Emnati 2022,2022-02-23,Cyclone,Emnati,TC-2022-000175-MDG,EMNATI,6.0,,,False,,,,,,,,,,,https://reliefweb.int/disaster/tc-2022-000175-mdg,9.0,678.7,UNOSAT,,GPM IMERG Final,"Validation (hazard, risk)",
+Gombe 2022,2022-03-08,Cyclone,Gombe,TC-2022-000184-MOZ,GOMBE,2.0,,,False,,,,,,,,,,,https://reliefweb.int/disaster/tc-2022-000184-moz,,,,,GPM IMERG Final,,
+Cheneso 2023,2023-01-19,Cyclone,Cheneso,TC-2023-000012-MDG,,,,,,,,,,,,,,,,https://reliefweb.int/disaster/tc-2023-000012-mdg,19.0,,,GESCOD 1 m model (Mahajanga),GPM IMERG Final,Calibration (hazard),
+Freddy 2023,2023-02-21,Cyclone,Freddy,TC-2023-000023-MDG,,,,,,,,,,,,,,,,https://reliefweb.int/disaster/tc-2023-000023-mdg,8.0,55.3,UNOSAT,,GPM IMERG Final,Negative test (coastal/fluvial),
+Alvaro 2024,2024-01-01,Cyclone,Alvaro,,,,,,,,,,,,,,,,,,13.0,0.0,UNOSAT,,GPM IMERG Final,,
+Eleanor 2024,2024-02-26,Cyclone,Eleanor,,,,,,,,,,,,,,,,,,2.0,,,,GPM IMERG Final,,
+Filipo 2024,2024-03-03,Cyclone,Filipo,,,,,,,,,,,,,,,,,,5.0,,,,GPM IMERG Final,,
+Gamane 2024,2024-03-27,Cyclone,Gamane,TC-2024-000042-MDG,,,,,,,,,,1.0,0.0,0.0,0.0,0.0,0.0,https://reliefweb.int/disaster/tc-2024-000042-mdg,30.0,10.9,UNOSAT,,GPM IMERG Final,,0.0
+Chido 2024,2024-12-13,Cyclone,Chido,TC-2024-000224-MOZ,,,,,,,,,,1.0,0.0,0.0,0.0,0.0,0.0,https://reliefweb.int/disaster/tc-2024-000224-moz,1.0,,,,GPM IMERG Final,,0.0
+Dikeledi 2025,2025-01-11,Cyclone,Dikeledi,TC-2025-000009-MDG,,,,,,,,,,,,,,,,https://reliefweb.int/disaster/tc-2025-000009-mdg,18.0,,,,GPM IMERG Final,,
+Elvis 2025,2025-01-28,Cyclone,Elvis,,,,,,,,,,,,,,,,,,1.0,,,,GPM IMERG Final,,
+Faida 2025,2025-02-05,Cyclone,Faida,,,,,,,,,,,,,,,,,,6.0,,,,GPM IMERG Final,,
+Garance 2025,2025-02-23,Cyclone,Garance,,,,,,,,,,,,,,,,,,23.0,,,,GPM IMERG Final,,
+Honde 2025,2025-02-28,Cyclone,Honde,TC-2025-000025-MDG,,,,,,,,,,,,,,,,https://reliefweb.int/disaster/tc-2025-000025-mdg,24.0,,,,GPM IMERG Final,,
+Jude 2025,2025-03-07,Cyclone,Jude,TC-2025-000027-MOZ,,,,,,,,,,,,,,,,https://reliefweb.int/disaster/tc-2025-000027-moz,18.0,99.9,UNOSAT,,GPM IMERG Final,,
+Grant 2026,2026-01-07,Cyclone,Grant,,,,,,,,,,,,,,,,,,13.0,,,,GPM IMERG Late,,
+Ewetse 2026,2026-01-21,Cyclone,Ewetse,,,,,,,,,,,,,,,,,,2.0,,,,GPM IMERG Late,,
+Fytia 2026,2026-01-31,Cyclone,Fytia,TC-2026-000009-MDG,,,,,,,,,,,,,,,,https://reliefweb.int/disaster/tc-2026-000009-mdg,,5.7,Copernicus EMS,,GPM IMERG Late,,
+Gezani 2026,2026-02-10,Cyclone,Gezani,TC-2026-000015-MDG,,,,,,,,,,,,,,,,https://reliefweb.int/disaster/tc-2026-000015-mdg,,16.4,Copernicus EMS,,GPM IMERG Late,"Validation (hazard, urban)",
