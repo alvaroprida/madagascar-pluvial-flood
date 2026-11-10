@@ -1,0 +1,127 @@
+{
+ "haruna": {
+  "n_polygons": 314,
+  "area_km2": 2641,
+  "n_catchments": 171,
+  "driver_pct": {
+   "Coastal (≤ 10 km of shore)": 39.2,
+   "Fluvial-prone (catchment with upstream inflow)": 49.4,
+   "Headwater (pluvial candidate)": 11.5
+  }
+ },
+ "v7v": {
+  "n_polygons": 40,
+  "area_km2": 583,
+  "n_catchments": 41,
+  "driver_pct": {
+   "Coastal (≤ 10 km of shore)": 62.3,
+   "Fluvial-prone (catchment with upstream inflow)": 27.2,
+   "Headwater (pluvial candidate)": 10.5
+  },
+  "inside_fluvial_rp10_pct": 23.5,
+  "fluvial_rp10_inside_obs_pct": 48.3
+ },
+ "mahajanga": {
+  "wet_km2": 2.4,
+  "median_m": 0.65,
+  "p99_m": 3.58,
+  "max_m": 4.96,
+  "area_gt_0p5m_km2": 1.4,
+  "centroid": [
+   46.323717253477426,
+   -15.708898809751206
+  ]
+ },
+ "groundsource": {
+  "n_events": 874,
+  "first": "2005-03-07",
+  "last": "2026-01-24",
+  "n_tc": 450,
+  "n_storms": 48,
+  "median_area_km2": 3.3,
+  "pct_under_10km2": 65.6,
+  "median_duration_days": 1.0,
+  "since_2022_pct": 57.8,
+  "driver_pct": {
+   "coastal": 34.4,
+   "fluvial_prone": 40.3,
+   "headwater": 25.3
+  },
+  "top_storms": [
+   [
+    "Ana 2022",
+    44
+   ],
+   [
+    "Gamane 2024",
+    30
+   ],
+   [
+    "Diane 2020",
+    28
+   ],
+   [
+    "Batsirai 2022",
+    27
+   ],
+   [
+    "Honde 2025",
+    24
+   ],
+   [
+    "Garance 2025",
+    23
+   ],
+   [
+    "Enawo 2017",
+    22
+   ],
+   [
+    "Ava 2018",
+    19
+   ],
+   [
+    "Cheneso 2023",
+    19
+   ],
+   [
+    "Jude 2025",
+    18
+   ]
+  ],
+  "top_nontc_months": [
+   [
+    "2015-02",
+    45
+   ],
+   [
+    "2025-02",
+    39
+   ],
+   [
+    "2024-02",
+    34
+   ],
+   [
+    "2022-01",
+    27
+   ],
+   [
+    "2024-01",
+    27
+   ],
+   [
+    "2020-01",
+    22
+   ],
+   [
+    "2007-04",
+    21
+   ],
+   [
+    "2019-02",
+    18
+   ]
+  ]
+ }
+}

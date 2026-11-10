@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Calibration } from './components/Calibration'
 import { Compute } from './components/Compute'
 import { Domain } from './components/Domain'
 import { Exposure } from './components/Exposure'
@@ -22,6 +23,7 @@ const TABS = [
   ['exposure', 'Exposure'],
   ['vulnerability', 'Vulnerability'],
   ['risk', 'Risk'],
+  ['calibration', 'Calibration & validation'],
   ['compute', 'Compute planner'],
   ['method', 'Method & sources'],
 ] as const
@@ -98,6 +100,7 @@ export default function App() {
           {tab === 'exposure' && <Exposure exposure={data.exposure} catchments={data.catchments} palette={palette} dark={dark} />}
           {tab === 'vulnerability' && <Vulnerability curves={data.vulnerability} exposure={data.exposure} palette={palette} />}
           {tab === 'risk' && <Risk palette={palette} dark={dark} />}
+          {tab === 'calibration' && <Calibration palette={palette} />}
           {tab === 'compute' && <Compute benchmark={data.benchmark} prices={data.prices} palette={palette} />}
           {tab === 'method' && <Method />}
         </main>
