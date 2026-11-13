@@ -1,0 +1,121 @@
+{
+ "coordinates": [
+  [
+   43.0,
+   -11.8
+  ],
+  [
+   50.75,
+   -11.8
+  ],
+  [
+   50.75,
+   -25.75
+  ],
+  [
+   43.0,
+   -25.75
+  ]
+ ],
+ "layers": [
+  {
+   "key": "topography",
+   "name": "Elevation",
+   "source": "FABDEM V1-2",
+   "file": "topography.webp",
+   "legend": {
+    "type": "continuous",
+    "min": 0,
+    "max": 1700.0,
+    "unit": "m",
+    "colors": [
+     "#ffffe5",
+     "#feeba2",
+     "#febb47",
+     "#f07818",
+     "#b84203",
+     "#662506"
+    ]
+   }
+  },
+  {
+   "key": "landcover",
+   "name": "Land cover",
+   "source": "Copernicus LC100 (2019)",
+   "file": "landcover.webp",
+   "legend": {
+    "type": "categorical",
+    "items": [
+     {
+      "label": "Herbaceous vegetation",
+      "color": "#ffff4c"
+     },
+     {
+      "label": "Open forest unknown",
+      "color": "#648c00"
+     },
+     {
+      "label": "Shrubs",
+      "color": "#ffbb22"
+     },
+     {
+      "label": "Closed forest evergreen broad leaf",
+      "color": "#009900"
+     },
+     {
+      "label": "Closed forest deciduous broad leaf",
+      "color": "#00cc00"
+     },
+     {
+      "label": "Cultivated and managed vegetation/agriculture (cropland)",
+      "color": "#f096ff"
+     },
+     {
+      "label": "Other classes",
+      "color": "#d9d9d9"
+     }
+    ]
+   }
+  },
+  {
+   "key": "cn_arcii",
+   "name": "Curve number ARC II",
+   "source": "GCN250 ARC II, average soil moisture, thunderstorms",
+   "file": "cn_arcii.webp",
+   "legend": {
+    "type": "continuous",
+    "min": 70.0,
+    "max": 95.0,
+    "unit": "",
+    "colors": [
+     "#ffffcc",
+     "#fee187",
+     "#feab49",
+     "#fc5b2e",
+     "#d41020",
+     "#800026"
+    ]
+   }
+  },
+  {
+   "key": "cn_arciii",
+   "name": "Curve number ARC III",
+   "source": "GCN250 ARC III, wet soils, cyclones",
+   "file": "cn_arciii.webp",
+   "legend": {
+    "type": "continuous",
+    "min": 70.0,
+    "max": 95.0,
+    "unit": "",
+    "colors": [
+     "#ffffcc",
+     "#fee187",
+     "#feab49",
+     "#fc5b2e",
+     "#d41020",
+     "#800026"
+    ]
+   }
+  }
+ ]
+}
