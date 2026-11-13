@@ -20,14 +20,22 @@ const TABS = [
   ['inputs', 'Static inputs'],
   ['rainfall', 'Rainfall'],
   ['setup', 'Model setup'],
+  ['compute', 'Compute planner'],
   ['exposure', 'Exposure'],
   ['vulnerability', 'Vulnerability'],
   ['risk', 'Risk'],
   ['calibration', 'Calibration & validation'],
-  ['compute', 'Compute planner'],
   ['method', 'Method & sources'],
 ] as const
 export type TabKey = (typeof TABS)[number][0]
+
+/** Sub-tabs grouped under the Hazard tab (each keeps its own URL hash). */
+const HAZARD: readonly TabKey[] = ['domain', 'inputs', 'rainfall', 'setup', 'compute']
+const label = (k: TabKey) => TABS.find(([t]) => t === k)![1]
+/** Top-level navigation: Hazard replaces its sub-tabs, at the position of the first one. */
+const TOP: readonly (TabKey | 'hazard')[] = TABS.map(([k]) => k)
+  .filter((k) => !HAZARD.includes(k) || k === HAZARD[0])
+  .map((k) => (k === HAZARD[0] ? 'hazard' : k))
 
 function initialTab(): TabKey {
   const h = window.location.hash.slice(1)
@@ -74,19 +82,39 @@ export default function App() {
       </div>
 
       <nav className="flex gap-1 overflow-x-auto border-b border-line" aria-label="Sections">
-        {TABS.map(([k, label]) => (
-          <button
-            key={k}
-            onClick={() => go(k)}
-            aria-current={tab === k ? 'page' : undefined}
-            className={`-mb-px shrink-0 border-b-2 px-3 py-2 text-sm ${
-              tab === k ? 'border-accent font-medium text-ink' : 'border-transparent text-ink-2 hover:text-ink'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
+        {TOP.map((k) => {
+          const active = k === 'hazard' ? HAZARD.includes(tab) : tab === k
+          return (
+            <button
+              key={k}
+              onClick={() => go(k === 'hazard' ? HAZARD[0] : k)}
+              aria-current={active ? 'page' : undefined}
+              className={`-mb-px shrink-0 border-b-2 px-3 py-2 text-sm ${
+                active ? 'border-accent font-medium text-ink' : 'border-transparent text-ink-2 hover:text-ink'
+              }`}
+            >
+              {k === 'hazard' ? 'Hazard' : label(k)}
+            </button>
+          )
+        })}
       </nav>
+
+      {HAZARD.includes(tab) && (
+        <nav className="-mt-2 flex gap-1 overflow-x-auto border-b border-line" aria-label="Hazard sections">
+          {HAZARD.map((k) => (
+            <button
+              key={k}
+              onClick={() => go(k)}
+              aria-current={tab === k ? 'page' : undefined}
+              className={`-mb-px shrink-0 border-b-2 px-3 py-1.5 text-[13px] ${
+                tab === k ? 'border-accent text-ink' : 'border-transparent text-ink-3 hover:text-ink'
+              }`}
+            >
+              {label(k)}
+            </button>
+          ))}
+        </nav>
+      )}
 
       {error && <div className="p-8 text-ink">Could not load data: {error}</div>}
       {!data && !error && <div className="p-8 text-ink-3">Loading…</div>}
