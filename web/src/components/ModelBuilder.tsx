@@ -400,7 +400,9 @@ export function ModelBuilder({ catchments, palette, dark }: { catchments: Featur
             <div className="mb-1 flex items-center gap-1.5 font-medium text-ink"><span className="h-2 w-2 rounded-full bg-ink-3" />Local builder not running</div>
             <p className="text-ink-2">Models are built and run on your machine by the pipeline. In the code repository, with its environment active:</p>
             <pre className="mt-2 overflow-x-auto rounded bg-banner px-2 py-1.5 text-xs text-ink">python scripts/model_builder_server.py</pre>
-            <p className="mt-1 text-ink-3">This page checks for it every 5 s and connects on its own. Running models also needs Docker Desktop. Needs access to the code repository; works in Chrome, Edge and Firefox.</p>
+            <p className="mt-1 text-ink-3">On Windows, double-click <code>scripts\start_builder.bat</code>. This page checks for it every 5 s and connects on its own. Running models also needs Docker Desktop. Works in Chrome, Edge and Firefox.</p>
+            <button onClick={() => document.getElementById('setup-guide')?.scrollIntoView({ behavior: 'smooth' })}
+              className="mt-2 text-accent underline underline-offset-2">First time on this computer? Setup guide ↓</button>
           </div>
         )}
 

@@ -1,6 +1,7 @@
 import type { Palette } from '../theme'
 import type { FeatureCollection } from '../types'
 import { ModelBuilder } from './ModelBuilder'
+import { SetupGuide } from './SetupGuide'
 import { Card, Info, Steps } from './ui'
 
 export function ModelSetup({ catchments, palette, dark }: { catchments: FeatureCollection; palette: Palette; dark: boolean }) {
@@ -23,6 +24,13 @@ export function ModelSetup({ catchments, palette, dark }: { catchments: FeatureC
       >
         <ModelBuilder catchments={catchments} palette={palette} dark={dark} />
       </Card>
+
+      <div id="setup-guide" className="scroll-mt-4">
+        <Card title="Set up the model builder on your computer (Windows)"
+          subtitle="Step-by-step installation for workshop participants: Python, Docker, the code and the workshop data, then your first model.">
+          <SetupGuide />
+        </Card>
+      </div>
 
       <Card title="Simulations">
         <div role="note" className="rounded-lg bg-banner px-4 py-3 text-sm text-ink">
