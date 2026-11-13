@@ -124,7 +124,7 @@ export default function App() {
           {tab === 'domain' && <Domain domain={data.domain} catchments={data.catchments} palette={palette} dark={dark} />}
           {tab === 'inputs' && <StaticInputs catchments={data.catchments} palette={palette} dark={dark} />}
           {tab === 'rainfall' && <Rainfall rainfall={data.rainfall} cyclones={data.cyclones} tracks={data.tracks} catchments={data.catchments} palette={palette} dark={dark} />}
-          {tab === 'setup' && <ModelSetup domain={data.domain} />}
+          {tab === 'setup' && <ModelSetup catchments={data.catchments} palette={palette} dark={dark} />}
           {tab === 'exposure' && <Exposure exposure={data.exposure} catchments={data.catchments} palette={palette} dark={dark} />}
           {tab === 'vulnerability' && <Vulnerability curves={data.vulnerability} exposure={data.exposure} palette={palette} />}
           {tab === 'risk' && <Risk palette={palette} dark={dark} />}

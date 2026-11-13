@@ -1,10 +1,9 @@
-import { useState } from 'react'
-import { dataUrl } from '../data'
-import type { Domain } from '../types'
-import { Card, Figure, Info, Segmented, Steps } from './ui'
+import type { Palette } from '../theme'
+import type { FeatureCollection } from '../types'
+import { ModelBuilder } from './ModelBuilder'
+import { Card, Info, Steps } from './ui'
 
-export function ModelSetup({ domain }: { domain: Domain }) {
-  const [pilot, setPilot] = useState(domain.pilots[0].basin_id)
+export function ModelSetup({ catchments, palette, dark }: { catchments: FeatureCollection; palette: Palette; dark: boolean }) {
   return (
     <div className="space-y-4">
       <Card title="From inputs to a SFINCS model" subtitle="Built per basin with HydroMT-SFINCS from the basin's data catalogue.">
@@ -20,11 +19,9 @@ export function ModelSetup({ domain }: { domain: Domain }) {
 
       <Card
         title="Model setup check"
-        subtitle="Active mask and outflow boundary, subgrid elevation, infiltration capacity and the rainfall forcing, as drawn by the pipeline after setup."
-        actions={<Segmented label="Pilot basin" value={pilot} onChange={setPilot}
-          options={domain.pilots.map((p) => ({ value: p.basin_id, label: p.basin_id }))} />}
+        subtitle="Select a catchment and a design storm, generate its SFINCS model on your machine, and get a quality assurance report: files, grid, active area, outflow boundary, terrain, infiltration, rainfall forcing and run configuration."
       >
-        <Figure src={dataUrl(`figures/basins/${pilot}/06_model_setup.png`)} alt={`SFINCS model setup for basin ${pilot}`} />
+        <ModelBuilder catchments={catchments} palette={palette} dark={dark} />
       </Card>
 
       <Card title="Simulations">
