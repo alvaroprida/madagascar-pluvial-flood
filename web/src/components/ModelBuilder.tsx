@@ -16,6 +16,7 @@ const BASEMAP = {
 }
 const MDG: [[number, number], [number, number]] = [[43.1, -25.7], [50.6, -11.9]]
 const RPS = ['5', '10', '20', '50', '100', '200', '500', '1000']
+const RES = ['25', '50', '100', '200']
 const STORMS = [
   { value: 'nontc', label: 'Non-cyclone · 12 h · ARC II' },
   { value: 'tc', label: 'Cyclone · 72 h · ARC III' },
@@ -26,7 +27,7 @@ interface Check { check: string; status: 'pass' | 'warn' | 'fail'; detail: strin
 interface QA {
   status: Check['status']; checks: Check[]; run?: string; run_dir?: string; model_dir?: string
   active_cells?: number; active_km2?: number; basin_km2?: number; run_hours?: number; est_run_minutes?: number
-  storm_depth_mm?: number; peak_mm_hr?: number; run_command?: string
+  storm_depth_mm?: number; peak_mm_hr?: number; run_command?: string; res_m?: number
 }
 interface Job { id: string; status: 'queued' | 'running' | 'done' | 'failed'; stage: string; log: string[]; result: QA | null; error: string | null; seconds?: number }
 interface ModelInfo { built: boolean; model_dir: string; figure: boolean; runs: (QA & { run: string })[] }
@@ -72,6 +73,7 @@ export function ModelBuilder({ catchments, palette, dark }: { catchments: Featur
   const [hover, setHover] = useState<{ id: string; area: number; lng: number; lat: number } | null>(null)
   const [pop, setPop] = useState<Pop>('nontc')
   const [rp, setRp] = useState('100')
+  const [res, setRes] = useState('50')
   const [overwrite, setOverwrite] = useState(false)
   const [health, setHealth] = useState<Health | null>(null)
   const [info, setInfo] = useState<ModelInfo>()
@@ -94,9 +96,9 @@ export function ModelBuilder({ catchments, palette, dark }: { catchments: Featur
 
   const refresh = useCallback(() => {
     if (!selected || !health) return setInfo(undefined)
-    api<ModelInfo>(`/models/${selected}`).then(setInfo).catch(() => setInfo(undefined))
+    api<ModelInfo>(`/models/${selected}?res=${res}`).then(setInfo).catch(() => setInfo(undefined))
     setFigKey((k) => k + 1)
-  }, [selected, health])
+  }, [selected, health, res])
   useEffect(refresh, [refresh])
 
   // poll the running job
@@ -113,7 +115,7 @@ export function ModelBuilder({ catchments, palette, dark }: { catchments: Featur
     if (!selected) return
     api<{ job: string }>('/build', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ basin_id: selected, population: pop, return_period: Number(rp), overwrite }),
+      body: JSON.stringify({ basin_id: selected, population: pop, return_period: Number(rp), res: Number(res), overwrite }),
     }).then((r) => setJob({ id: r.job, status: 'queued', stage: 'queued', log: [], result: null, error: null }))
       .catch((e) => setJob({ id: '-', status: 'failed', stage: '', log: [], result: null, error: String(e) }))
   }
@@ -141,7 +143,7 @@ export function ModelBuilder({ catchments, palette, dark }: { catchments: Featur
 
   const runName = `design_${pop}_rp${rp}`
   const thisRun = info?.runs.find((r) => r.run === runName)
-  const qa = job?.status === 'done' && job.result?.run === runName ? job.result : thisRun
+  const qa = job?.status === 'done' && job.result?.run === runName && String(job.result.res_m) === res ? job.result : thisRun
   const busy = job && (job.status === 'queued' || job.status === 'running')
 
   return (
@@ -201,6 +203,11 @@ export function ModelBuilder({ catchments, palette, dark }: { catchments: Featur
                 {RPS.map((r) => <option key={r} value={r}>{r}-year</option>)}
               </select>
             </label>
+            <label className="flex items-center gap-1.5 text-ink-2">Resolution
+              <select value={res} onChange={(e) => setRes(e.target.value)} className="rounded-md border border-line bg-surface px-2 py-1 text-ink">
+                {RES.map((r) => <option key={r} value={r}>{r} m{r === '50' ? ' (default)' : ''}</option>)}
+              </select>
+            </label>
             <label className="flex items-center gap-1.5 text-ink-2">
               <input type="checkbox" checked={overwrite} onChange={(e) => setOverwrite(e.target.checked)} className="accent-accent" />
               Rebuild from scratch
@@ -247,13 +254,13 @@ export function ModelBuilder({ catchments, palette, dark }: { catchments: Featur
               <li>On Apple Silicon the image runs emulated (it is x86 only); set <code>run.platform: linux/amd64</code> in the settings if Docker does not pick it.</li>
             </ul>
             <pre className="mt-2 overflow-x-auto rounded bg-banner px-2 py-1.5 text-xs text-ink">{qa.run_command ?? `docker run --rm -v "${qa.run_dir}:/data" ${health?.run_image ?? 'deltares/sfincs-cpu:sfincs-v2.4.1'}`}</pre>
-            <p className="mt-1 text-ink-3">The run folder is self-contained (static files hard-linked to the base model): it can be copied and run elsewhere. Maximum depth is written to <code>sfincs_map.nc</code>.</p>
+            <p className="mt-1 text-ink-3">Cost grows about eight-fold each time the cell size halves (four times the cells, half the time step). The run folder is self-contained (static files hard-linked to the base model): it can be copied and run elsewhere. Maximum depth is written to <code>sfincs_map.nc</code>.</p>
           </div>
         )}
 
         {info?.runs && info.runs.length > 0 && (
           <div>
-            <div className="mb-1 font-medium text-ink">Runs already prepared for this catchment</div>
+            <div className="mb-1 font-medium text-ink">Runs already prepared for this catchment at {res} m</div>
             <ul className="flex flex-wrap gap-1.5">
               {info.runs.map((r) => (
                 <li key={r.run} className="flex items-center gap-1 rounded-md border border-line px-2 py-0.5 text-xs text-ink-2">
@@ -266,7 +273,7 @@ export function ModelBuilder({ catchments, palette, dark }: { catchments: Featur
 
         {info?.figure && selected && (
           <figure>
-            <img src={`${API}/models/${selected}/figure?k=${figKey}`} alt={`SFINCS model overview for catchment ${selected}`} className="w-full rounded-lg border border-line" />
+            <img src={`${API}/models/${selected}/figure?res=${res}&k=${figKey}`} alt={`SFINCS model overview for catchment ${selected}`} className="w-full rounded-lg border border-line" />
             <figcaption className="mt-1 text-xs text-ink-3">Base model as built: mask and outflow boundary, subgrid elevation, infiltration (ARC II) and its default forcing.</figcaption>
           </figure>
         )}
