@@ -402,7 +402,7 @@ export function ModelBuilder({ catchments, palette, dark }: { catchments: Featur
             <pre className="mt-2 overflow-x-auto rounded bg-banner px-2 py-1.5 text-xs text-ink">python scripts/model_builder_server.py</pre>
             <p className="mt-1 text-ink-3">On Windows, double-click <code>scripts\start_builder.bat</code>. This page checks for it every 5 s and connects on its own. Running models also needs Docker Desktop. Works in Chrome, Edge and Firefox.</p>
             <button onClick={() => document.getElementById('setup-guide')?.scrollIntoView({ behavior: 'smooth' })}
-              className="mt-2 text-accent underline underline-offset-2">First time on this computer? Setup guide ↓</button>
+              className="mt-2 text-accent underline underline-offset-2">First time on this computer? Setup guide · Guide d’installation ↓</button>
           </div>
         )}
 
