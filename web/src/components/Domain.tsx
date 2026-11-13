@@ -56,7 +56,7 @@ function Tree({ node, max }: { node: SplitNode; max: number }) {
 }
 
 export function Domain({ domain, catchments, palette, dark }: Props) {
-  const [hover, setHover] = useState<{ id: string; area: number; level: number; inflow: number; endo: number; pilot: boolean; lng: number; lat: number } | null>(null)
+  const [hover, setHover] = useState<{ id: string; area: number; level: number; inflow: number; endo: number; lng: number; lat: number } | null>(null)
   const [colourBy, setColourBy] = useState<ColourBy>('area')
   const s = domain.area_stats_km2
   const levels = Object.entries(domain.by_level).map(([k, v]) => ({ level: Number(k), ...v }))
@@ -70,7 +70,7 @@ export function Domain({ domain, catchments, palette, dark }: Props) {
     const f = e.features?.[0]
     const p = f?.properties
     setHover(p ? { id: p.basin_id, area: p.area_km2, level: p.level, inflow: p.upstream_inflow_km2, endo: p.endo,
-                   pilot: p.pilot, lng: e.lngLat.lng, lat: e.lngLat.lat } : null)
+                   lng: e.lngLat.lng, lat: e.lngLat.lat } : null)
   }
 
   const axis = {
@@ -141,7 +141,7 @@ export function Domain({ domain, catchments, palette, dark }: Props) {
 
       <Card
         title="Pluvial catchments"
-        subtitle="HydroBASINS level 7, split into finer levels wherever a basin exceeds the threshold. Hover a catchment for its id; the pilot basins are outlined."
+        subtitle="HydroBASINS level 7, split into finer levels wherever a basin exceeds the threshold. Hover a catchment for its id."
         actions={<Segmented label="Colour by" value={colourBy} onChange={setColourBy}
           options={[{ value: 'area', label: 'Area' }, { value: 'level', label: 'HydroBASINS level' }]} />}
       >
@@ -163,12 +163,10 @@ export function Domain({ domain, catchments, palette, dark }: Props) {
                 <Layer id="catchment-line" type="line" paint={{ 'line-color': palette.surface, 'line-width': 0.5 }} />
                 <Layer id="catchment-hover" type="line" filter={['==', ['get', 'basin_id'], hover?.id ?? '']}
                   paint={{ 'line-color': palette['text-primary'], 'line-width': 2 }} />
-                <Layer id="pilot-line" type="line" filter={['==', ['get', 'pilot'], true]}
-                  paint={{ 'line-color': palette['cat-2'], 'line-width': 2.5 }} />
               </Source>
               {hover && (
                 <Popup longitude={hover.lng} latitude={hover.lat} closeButton={false} offset={12}>
-                  <div className="font-medium">{hover.id}{hover.pilot ? ' · pilot' : ''}</div>
+                  <div className="font-medium">{hover.id}</div>
                   <div className="tabular text-ink-2">{fmt(hover.area)} km² · level {hover.level}</div>
                   {hover.inflow > 0 && <div className="tabular text-ink-2">receives {fmt(hover.inflow)} km² from upstream</div>}
                   {hover.endo === 2 && <div className="text-ink-2">endorheic sink (closed boundaries)</div>}
@@ -190,9 +188,6 @@ export function Domain({ domain, catchments, palette, dark }: Props) {
                       Level {l} ({fmt(domain.by_level[l]?.n ?? 0)})
                     </div>
                   ))}
-              <div className="mt-1 flex items-center gap-1.5">
-                <span className="h-0.5 w-3" style={{ background: palette['cat-2'] }} /> Pilot basin
-              </div>
             </div>
           </div>
           <div>

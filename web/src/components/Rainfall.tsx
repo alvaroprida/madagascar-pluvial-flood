@@ -285,7 +285,7 @@ export function Rainfall({ rainfall: r, cyclones, tracks, catchments, palette, d
         outcome={<>One design hyetograph per population, return period and catchment, with its antecedent soil moisture: the rainfall input to the flood simulations. <Ref to="ch6">Chapter 6</Ref> gives them for every catchment.</>}>
         {d ? <>
           <StormMethod d={d} palette={palette} />
-          <StormShapes d={d} palette={palette} />
+          <StormShapes d={d} palette={palette} catchments={catchments} dark={dark} />
           <IntensityChecks d={d} />
         </> : <p className="text-sm text-ink-3">Loading…</p>}
       </Chapter>

@@ -5,7 +5,8 @@ import type { EChartsOption } from 'echarts'
 import { dataUrl } from '../data'
 import { fmt } from '../format'
 import { POP_LABEL, POP_SLOT, type Palette } from '../theme'
-import type { DesignStorms } from '../types'
+import type { DesignStorms, FeatureCollection } from '../types'
+import { TestCatchmentsMap } from './TestCatchmentsMap'
 import { Card, Chart, DataTable, Figure, Info, Ref, Segmented, Stat, Steps } from './ui'
 
 export const REPORT = 'IRD/ORSTOM (1993), Fleuves et rivières de Madagascar, §7.4'
@@ -652,7 +653,7 @@ export function StormMethod({ d, palette }: { d: DesignStorms; palette: Palette 
   )
 }
 
-export function StormShapes({ d, palette }: { d: DesignStorms; palette: Palette }) {
+export function StormShapes({ d, palette, catchments, dark }: { d: DesignStorms; palette: Palette; catchments: FeatureCollection; dark: boolean }) {
   const [basin, setBasin] = useState(d.catchments.find((c) => c.slot.startsWith('urban'))?.basin_id ?? d.catchments[0].basin_id)
   const [rp, setRp] = useState('100')
   const cfg = d.config, cap = cfg.report_peak_mm_hr
@@ -678,17 +679,19 @@ export function StormShapes({ d, palette }: { d: DesignStorms; palette: Palette 
   }
   return (
     <Section id="s5-2" title="5.2 Design hyetographs of the test catchments"
-      subtitle="The two design storms for the test catchments. Pick a catchment and a return period; every catchment is in Chapter 6."
+      subtitle="The two design storms for the test catchments. Pick a catchment on the map or in the list, and a return period; every catchment is in Chapter 6."
       actions={<Segmented label="Return period" value={rp} onChange={setRp} options={[{ value: '10', label: '10-year' }, { value: '100', label: '100-year' }]} />}>
       <div className="mb-3 flex flex-wrap gap-1.5" role="radiogroup" aria-label="Test catchment">
-        {d.catchments.map((x) => (
+        {d.catchments.map((x, i) => (
           <button key={x.basin_id} role="radio" aria-checked={x.basin_id === basin} onClick={() => setBasin(x.basin_id)}
             className={`rounded-md border px-2 py-1 text-xs ${x.basin_id === basin ? 'border-accent bg-accent text-white' : 'border-line text-ink-2 hover:text-ink'}`}>
-            {x.slot}
+            {i + 1} · {x.slot}
           </button>
         ))}
       </div>
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,0.75fr)_minmax(0,1.4fr)]">
+        <TestCatchmentsMap catchments={catchments} tests={d.catchments} selected={basin} onSelect={setBasin} palette={palette} dark={dark} />
+        <div className="space-y-4">
         {(['nontc', 'tc'] as const).map((pop) => {
           const s = storm(pop)
           return (
@@ -701,6 +704,7 @@ export function StormShapes({ d, palette }: { d: DesignStorms; palette: Palette 
             </div>
           )
         })}
+        </div>
       </div>
       <p className="mt-1 text-xs text-ink-3">Catchment {c.basin_id} ({fmt(c.area_km2)} km²). Daily depth PJ, {rp}-year: non-cyclone {fmt(c.daily_depth_mm.nontc[rp])} mm, cyclone {fmt(c.daily_depth_mm.tc[rp])} mm.</p>
     </Section>

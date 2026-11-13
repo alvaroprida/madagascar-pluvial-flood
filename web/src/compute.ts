@@ -7,7 +7,7 @@ export interface Benchmark {
   sfincs: string
   grid_m: number
   design_storm: string
-  runs: { basin_km2: number; active_cells: number; simulated_h: number; avg_dt_s: number; wall_s: number; cell_steps_per_s: number }[]
+  runs: { basin_id: string; basin_km2: number; active_cells: number; simulated_h: number; avg_dt_s: number; wall_s: number; cell_steps_per_s: number }[]
   domain: { n_basins: number; area_km2: number }
 }
 

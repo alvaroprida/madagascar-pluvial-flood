@@ -31,7 +31,7 @@ export function StaticLayersMap({ catchments, palette, dark }: { catchments: Fea
   const [layer, setLayer] = useState('topography')
   const [showCatchments, setShowCatchments] = useState(true)
   const [opacity, setOpacity] = useState(0.85)
-  const [hover, setHover] = useState<{ id: string; area: number; pilot: boolean; lng: number; lat: number } | null>(null)
+  const [hover, setHover] = useState<{ id: string; area: number; lng: number; lat: number } | null>(null)
 
   useEffect(() => {
     fetch(dataUrl('static_layers.json')).then((r) => r.json()).then(setMeta).catch(() => setMeta(undefined))
@@ -41,7 +41,7 @@ export function StaticLayersMap({ catchments, palette, dark }: { catchments: Fea
 
   const onMove = (e: MapLayerMouseEvent) => {
     const p = e.features?.[0]?.properties
-    setHover(p ? { id: p.basin_id, area: p.area_km2, pilot: p.pilot, lng: e.lngLat.lng, lat: e.lngLat.lat } : null)
+    setHover(p ? { id: p.basin_id, area: p.area_km2, lng: e.lngLat.lng, lat: e.lngLat.lat } : null)
   }
 
   return (
@@ -87,13 +87,10 @@ export function StaticLayersMap({ catchments, palette, dark }: { catchments: Fea
               <Layer id="static-catchment-hover" type="line" filter={['==', ['get', 'basin_id'], hover?.id ?? '']}
                 layout={{ visibility: showCatchments ? 'visible' : 'none' }}
                 paint={{ 'line-color': palette['text-primary'], 'line-width': 2 }} />
-              <Layer id="static-pilot-line" type="line" filter={['==', ['get', 'pilot'], true]}
-                layout={{ visibility: showCatchments ? 'visible' : 'none' }}
-                paint={{ 'line-color': palette['cat-2'], 'line-width': 2.5 }} />
             </Source>
             {hover && (
               <Popup longitude={hover.lng} latitude={hover.lat} closeButton={false} offset={12}>
-                <div className="font-medium">{hover.id}{hover.pilot ? ' · pilot' : ''}</div>
+                <div className="font-medium">{hover.id}</div>
                 <div className="tabular text-ink-2">{fmt(hover.area)} km²</div>
               </Popup>
             )}
@@ -128,7 +125,6 @@ export function StaticLayersMap({ catchments, palette, dark }: { catchments: Fea
           {showCatchments && (
             <div className="space-y-1 text-ink-2">
               <div className="flex items-center gap-1.5"><span className="h-0.5 w-4" style={{ background: dark ? '#fff' : '#333' }} /> Pluvial catchment (hover for id)</div>
-              <div className="flex items-center gap-1.5"><span className="h-0.5 w-4" style={{ background: palette['cat-2'] }} /> Pilot basin</div>
             </div>
           )}
           <p className="text-ink-3">Display grid ≈ 500 m in Web Mercator. The models read each source at its native resolution per basin.</p>

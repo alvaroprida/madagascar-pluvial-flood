@@ -6,6 +6,7 @@
  "design_storm": "100-year, 24 h, total rainfall, + 12 h drain",
  "runs": [
   {
+   "basin_id": "1071494550",
    "basin_km2": 68,
    "active_cells": 27691,
    "simulated_h": 36,
@@ -14,6 +15,7 @@
    "cell_steps_per_s": 4071170
   },
   {
+   "basin_id": "1071491870",
    "basin_km2": 424,
    "active_cells": 169450,
    "simulated_h": 36,
