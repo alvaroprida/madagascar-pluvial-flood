@@ -9,6 +9,9 @@ import { SCENARIO_LABEL } from './Exposure'
 import { Card, Chart, DataTable, Figure, Info, Segmented, Stat, Steps } from './ui'
 
 const FUTURE: FutureScenario[] = ['ssp2_2050', 'ssp5_2050', 'ssp2_2085', 'ssp5_2085']
+
+interface ModelGrid { model: string; name: string; dlon_deg: number; dlat_deg: number; dx_km: number; dy_km: number; cell_km: number; cells_over_madagascar: number; grid: string }
+interface ModelGrids { source: string; retrieved: string; models: ModelGrid[]; summary: { min_km: number; max_km: number; median_km: number; median_cells: number } }
 const POPS: PopKey[] = ['total', 'tc', 'nontc']
 type Index = 'rx1day' | 'rx5day'
 
@@ -25,10 +28,12 @@ export function FutureRainfall({ palette, initial }: { palette: Palette; initial
   const [pop, setPop] = useState<PopKey>('total')
   const [dur, setDur] = useState(24)
   const [band, setBand] = useState<FutureScenario | 'none'>('ssp5_2085')
+  const [grids, setGrids] = useState<ModelGrids>()
 
   useEffect(() => {
     fetch(dataUrl('climate_factors.json')).then((r) => r.json()).then(setCf)
     fetch(dataUrl('catchment_rainfall_summary.json')).then((r) => r.json()).then(setSummary)
+    fetch(dataUrl('climate_model_grids.json')).then((r) => r.json()).then(setGrids).catch(() => undefined)
   }, [])
   useEffect(() => {
     setDoc(undefined)
@@ -197,7 +202,7 @@ export function FutureRainfall({ palette, initial }: { palette: Palette; initial
 
       <Card title="Method and assumptions">
         <Steps items={[
-          { title: 'Data', body: <>Annual maximum 1-day (Rx1day) and 5-day (Rx5day) precipitation from the C3S dataset of ETCCDI indices computed on CMIP6 output (climdex.pcic, base-independent), for {cf.n_models} models with historical, SSP2-4.5 and SSP5-8.5 runs; one ensemble member per model (r1i1p1f1 where available) so models with many members do not dominate. Native grids from 0.5° to 2.8°.</> },
+          { title: 'Data', body: <>Annual maximum 1-day (Rx1day) and 5-day (Rx5day) precipitation from the C3S dataset of ETCCDI indices computed on CMIP6 output (climdex.pcic, base-independent), for {cf.n_models} models with historical, SSP2-4.5 and SSP5-8.5 runs; one ensemble member per model (r1i1p1f1 where available) so models with many members do not dominate. Native grids from 0.7° (EC-Earth3) to 2.8° (CanESM5, MIROC-ES2L){grids ? <>: cells of {grids.summary.min_km}–{grids.summary.max_km} km at Madagascar's latitude, median {grids.summary.median_km} km, so a typical model covers the island with about {grids.summary.median_cells} cells and none resolves a single catchment</> : null}. Extremes at this scale are smoothed (steep relief and cyclone cores are not resolved), one reason for using a national ratio rather than local values.</> },
           { title: 'Change per model', body: <>Mean of the annual index over {cf.windows['2050'].join('–')} and {cf.windows['2085'].join('–')} divided by its mean over the baseline, both from the same model, so the model's own bias cancels. Each model is interpolated to a common 1° grid and averaged over Madagascar (area-weighted) before the ratio is taken.</> },
           { title: 'Baseline correction', body: <>The observed curves come from GPM {cf.baseline_period.join('–')}, not the IPCC AR6 reference period {cf.ar6_reference_period.join('–')}. Each model's own {cf.baseline_period.join('–')} mean (historical run to 2014, then the same model's scenario run) is used as the baseline, so the warming already in the record is not counted twice. The correction is small: models put {cf.baseline_period.join('–')} {fmt((cf.scenarios.ssp2_2050.rx1day.baseline_shift_median - 1) * 100, 1)}% above {cf.ar6_reference_period.join('–')}.</> },
           { title: 'Central value and range', body: <>The adopted factor is the median across models; the 10th–90th percentile is the uncertainty range. The share of models projecting an increase is reported as a measure of agreement.</> },
@@ -205,6 +210,21 @@ export function FutureRainfall({ palette, initial }: { palette: Palette; initial
           { title: 'Same relative change for all return periods', body: <>The factor is derived from the mean annual maximum (roughly a 2–3 year event) and assumed to hold for rare events too. This is standard practice; rare extremes may in reality change more.</> },
           { title: 'Reference scaling', body: <>7% more extreme rainfall per °C of additional global warming (IPCC AR6), with warming levels from AR6 Table SPM.1 ({cf.windows['2050'].join('–')}: SSP2-4.5 2.0 °C, SSP5-8.5 2.4 °C; {cf.windows['2085'].join('–')}: 2.7 °C and 4.4 °C, relative to 1850–1900) minus 1.0 °C already in the GPM period. Shown for comparison, not used.</> },
         ]} />
+        {grids && (
+          <details className="mt-3 rounded-lg border border-line">
+            <summary className="cursor-pointer px-3 py-2 text-sm font-medium text-ink">Resolution of the {grids.models.length} climate models</summary>
+            <div className="border-t border-line px-3 py-3">
+              <DataTable caption="Native atmospheric grid of each CMIP6 model"
+                head={['Model', 'Grid (lon × lat)', 'Cell at Madagascar (km)', 'Cells over Madagascar', 'Grid description']}
+                rows={grids.models.map((m) => [m.name, `${m.dlon_deg}° × ${m.dlat_deg}°`, `${m.dx_km} × ${m.dy_km}`,
+                  fmt(m.cells_over_madagascar), m.grid.length > 70 ? `${m.grid.slice(0, 70)}…` : m.grid])} />
+              <p className="mt-2 text-xs text-ink-3">
+                Read from the Rx1day files of the C3S dataset (CMIP6 ETCCDI indices, v2.0), retrieved {grids.retrieved}. Cell sizes at 19° S;
+                cells over Madagascar = land area (about 587,000 km²) ÷ cell area. For scale, the median modelling catchment is 211 km².
+              </p>
+            </div>
+          </details>
+        )}
       </Card>
     </div>
   )
