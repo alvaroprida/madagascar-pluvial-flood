@@ -1,0 +1,645 @@
+{
+ "layers": [
+  {
+   "id": "h1",
+   "group": "H1 \u00b7 Groundsource",
+   "name": "Flood footprints from news (2005\u20132026)",
+   "kind": "fill",
+   "color": "#ff7f0e",
+   "file": "calibration_map/h1_groundsource.geojson",
+   "n": 884,
+   "kb": 335,
+   "bounds": [
+    [
+     43.2927,
+     -25.6055
+    ],
+    [
+     50.3563,
+     -12.2311
+    ]
+   ]
+  },
+  {
+   "id": "h2",
+   "group": "H2 \u00b7 CPGU",
+   "name": "Haruna 2013 flooded zones",
+   "kind": "fill",
+   "color": "#9467bd",
+   "file": "calibration_map/h2_cpgu.geojson",
+   "n": 322,
+   "kb": 613,
+   "bounds": [
+    [
+     43.2249,
+     -25.2912
+    ],
+    [
+     45.8219,
+     -21.0184
+    ]
+   ]
+  },
+  {
+   "id": "h3",
+   "group": "H3 \u00b7 CPGU",
+   "name": "Vatovavy Fitovinany flood-prone areas",
+   "kind": "fill",
+   "color": "#c39bd3",
+   "file": "calibration_map/h3_cpgu.geojson",
+   "n": 40,
+   "kb": 95,
+   "bounds": [
+    [
+     47.6923,
+     -22.4617
+    ],
+    [
+     48.5995,
+     -20.4008
+    ]
+   ]
+  },
+  {
+   "id": "h4",
+   "group": "H4 \u00b7 GESCOD",
+   "name": "Cheneso 2023 max depth, Mahajanga (modelled)",
+   "kind": "image",
+   "file": "calibration_map/h4_cheneso_depth.png",
+   "kb": 205,
+   "coordinates": [
+    [
+     46.304506526632856,
+     -15.692586499224497
+    ],
+    [
+     46.34294652663286,
+     -15.692586499224497
+    ],
+    [
+     46.34294652663286,
+     -15.725226499224497
+    ],
+    [
+     46.304506526632856,
+     -15.725226499224497
+    ]
+   ],
+   "bounds": [
+    [
+     46.304506526632856,
+     -15.725226499224497
+    ],
+    [
+     46.34294652663286,
+     -15.692586499224497
+    ]
+   ],
+   "legend": [
+    {
+     "label": "0.05\u20130.15 m",
+     "color": "#c6dbef"
+    },
+    {
+     "label": "0.15\u20130.3 m",
+     "color": "#9ecae1"
+    },
+    {
+     "label": "0.3\u20130.5 m",
+     "color": "#6baed6"
+    },
+    {
+     "label": "0.5\u20131 m",
+     "color": "#3182bd"
+    },
+    {
+     "label": "1\u20132 m",
+     "color": "#08519c"
+    },
+    {
+     "label": "> 2 m",
+     "color": "#08306b"
+    }
+   ]
+  },
+  {
+   "id": "aa_alvaro_2024",
+   "name": "Alvaro 2024 analysed area",
+   "kind": "line",
+   "color": "#1f77b4",
+   "group": "H5 \u00b7 UNOSAT",
+   "event": "Alvaro 2024",
+   "date": "20230103",
+   "sensor": "Sentinel-1",
+   "file": "calibration_map/area_alvaro_2024.geojson",
+   "n": 13,
+   "kb": 9,
+   "bounds": [
+    [
+     43.2618,
+     -22.9858
+    ],
+    [
+     48.0938,
+     -21.2619
+    ]
+   ]
+  },
+  {
+   "id": "fl_ava_2018",
+   "name": "Ava 2018 flood extent",
+   "kind": "fill",
+   "color": "#1f77b4",
+   "group": "H5 \u00b7 UNOSAT",
+   "event": "Ava 2018",
+   "date": "20180107",
+   "sensor": "ST20180107",
+   "simplify_m": 22,
+   "min_patch_ha": 1.0,
+   "file": "calibration_map/flood_ava_2018.geojson",
+   "n": 2365,
+   "kb": 2278,
+   "bounds": [
+    [
+     47.6701,
+     -22.5421
+    ],
+    [
+     49.9597,
+     -16.6538
+    ]
+   ]
+  },
+  {
+   "id": "aa_ava_2018",
+   "name": "Ava 2018 analysed area",
+   "kind": "line",
+   "color": "#1f77b4",
+   "group": "H5 \u00b7 UNOSAT",
+   "event": "Ava 2018",
+   "date": "20180107",
+   "sensor": "ST20180107",
+   "simplify_m": 22,
+   "min_patch_ha": 1.0,
+   "file": "calibration_map/area_ava_2018.geojson",
+   "n": 3,
+   "kb": 1,
+   "bounds": [
+    [
+     47.667,
+     -22.5437
+    ],
+    [
+     50.1215,
+     -16.5732
+    ]
+   ]
+  },
+  {
+   "id": "fl_batsirai_2022",
+   "name": "Batsirai 2022 flood extent",
+   "kind": "fill",
+   "color": "#1f77b4",
+   "group": "H5 \u00b7 UNOSAT",
+   "event": "Batsirai 2022",
+   "date": "20220212",
+   "sensor": "KOMPSAT-5",
+   "simplify_m": 44,
+   "min_patch_ha": 2.0,
+   "file": "calibration_map/flood_batsirai_2022.geojson",
+   "n": 1899,
+   "kb": 1345,
+   "bounds": [
+    [
+     45.3367,
+     -25.1805
+    ],
+    [
+     48.2262,
+     -19.246
+    ]
+   ]
+  },
+  {
+   "id": "aa_batsirai_2022",
+   "name": "Batsirai 2022 analysed area",
+   "kind": "line",
+   "color": "#1f77b4",
+   "group": "H5 \u00b7 UNOSAT",
+   "event": "Batsirai 2022",
+   "date": "20220212",
+   "sensor": "KOMPSAT-5",
+   "simplify_m": 44,
+   "min_patch_ha": 2.0,
+   "file": "calibration_map/area_batsirai_2022.geojson",
+   "n": 7,
+   "kb": 12,
+   "bounds": [
+    [
+     45.3351,
+     -25.2006
+    ],
+    [
+     48.2429,
+     -19.2443
+    ]
+   ]
+  },
+  {
+   "id": "fl_diane_2020",
+   "name": "Diane 2020 flood extent",
+   "kind": "fill",
+   "color": "#1f77b4",
+   "group": "H5 \u00b7 UNOSAT",
+   "event": "Diane 2020",
+   "date": "20200123",
+   "sensor": "VIIRS",
+   "simplify_m": 11,
+   "min_patch_ha": 0.5,
+   "file": "calibration_map/flood_diane_2020.geojson",
+   "n": 5162,
+   "kb": 1795,
+   "bounds": [
+    [
+     43.2486,
+     -25.5004
+    ],
+    [
+     50.4795,
+     -11.9841
+    ]
+   ]
+  },
+  {
+   "id": "fl_emnati_2022",
+   "name": "Emnati 2022 flood extent",
+   "kind": "fill",
+   "color": "#1f77b4",
+   "group": "H5 \u00b7 UNOSAT",
+   "event": "Emnati 2022",
+   "date": "20220228",
+   "sensor": "RCM",
+   "simplify_m": 44,
+   "min_patch_ha": 2.0,
+   "file": "calibration_map/flood_emnati_2022.geojson",
+   "n": 1962,
+   "kb": 1351,
+   "bounds": [
+    [
+     46.0528,
+     -25.0649
+    ],
+    [
+     48.7127,
+     -20.1334
+    ]
+   ]
+  },
+  {
+   "id": "aa_emnati_2022",
+   "name": "Emnati 2022 analysed area",
+   "kind": "line",
+   "color": "#1f77b4",
+   "group": "H5 \u00b7 UNOSAT",
+   "event": "Emnati 2022",
+   "date": "20220228",
+   "sensor": "RCM",
+   "simplify_m": 44,
+   "min_patch_ha": 2.0,
+   "file": "calibration_map/area_emnati_2022.geojson",
+   "n": 10,
+   "kb": 8,
+   "bounds": [
+    [
+     46.0412,
+     -25.0686
+    ],
+    [
+     48.7228,
+     -20.1244
+    ]
+   ]
+  },
+  {
+   "id": "fl_enawo_2017",
+   "name": "Enawo 2017 flood extent",
+   "kind": "fill",
+   "color": "#1f77b4",
+   "group": "H5 \u00b7 UNOSAT",
+   "event": "Enawo 2017",
+   "date": "20170308",
+   "sensor": "TerraSAR-X",
+   "simplify_m": 11,
+   "min_patch_ha": 0.5,
+   "file": "calibration_map/flood_enawo_2017.geojson",
+   "n": 2186,
+   "kb": 1572,
+   "bounds": [
+    [
+     48.3785,
+     -16.2495
+    ],
+    [
+     50.4702,
+     -14.7408
+    ]
+   ]
+  },
+  {
+   "id": "aa_enawo_2017",
+   "name": "Enawo 2017 analysed area",
+   "kind": "line",
+   "color": "#1f77b4",
+   "group": "H5 \u00b7 UNOSAT",
+   "event": "Enawo 2017",
+   "date": "20170308",
+   "sensor": "TerraSAR-X",
+   "simplify_m": 11,
+   "min_patch_ha": 0.5,
+   "file": "calibration_map/area_enawo_2017.geojson",
+   "n": 1,
+   "kb": 0,
+   "bounds": [
+    [
+     48.2701,
+     -16.4325
+    ],
+    [
+     51.0445,
+     -14.6218
+    ]
+   ]
+  },
+  {
+   "id": "fl_freddy_2023",
+   "name": "Freddy 2023 flood extent",
+   "kind": "fill",
+   "color": "#1f77b4",
+   "group": "H5 \u00b7 UNOSAT",
+   "event": "Freddy 2023",
+   "date": "20230223",
+   "sensor": "TerraSAR-X",
+   "simplify_m": 11,
+   "min_patch_ha": 0.5,
+   "file": "calibration_map/flood_freddy_2023.geojson",
+   "n": 1094,
+   "kb": 989,
+   "bounds": [
+    [
+     47.5251,
+     -22.434
+    ],
+    [
+     48.1867,
+     -21.6854
+    ]
+   ]
+  },
+  {
+   "id": "aa_freddy_2023",
+   "name": "Freddy 2023 analysed area",
+   "kind": "line",
+   "color": "#1f77b4",
+   "group": "H5 \u00b7 UNOSAT",
+   "event": "Freddy 2023",
+   "date": "20230223",
+   "sensor": "TerraSAR-X",
+   "simplify_m": 11,
+   "min_patch_ha": 0.5,
+   "file": "calibration_map/area_freddy_2023.geojson",
+   "n": 2,
+   "kb": 1,
+   "bounds": [
+    [
+     47.5084,
+     -22.4803
+    ],
+    [
+     48.2044,
+     -21.651
+    ]
+   ]
+  },
+  {
+   "id": "fl_fytia_2026",
+   "name": "Fytia 2026 flood extent",
+   "kind": "fill",
+   "color": "#d62728",
+   "group": "H6 \u00b7 Copernicus EMS",
+   "event": "Fytia 2026",
+   "date": "",
+   "sensor": "VHR optical",
+   "simplify_m": 11,
+   "min_patch_ha": 0.5,
+   "file": "calibration_map/flood_fytia_2026.geojson",
+   "n": 73,
+   "kb": 160,
+   "bounds": [
+    [
+     46.7084,
+     -19.3132
+    ],
+    [
+     48.962,
+     -16.4519
+    ]
+   ]
+  },
+  {
+   "id": "aa_fytia_2026",
+   "name": "Fytia 2026 analysed area",
+   "kind": "line",
+   "color": "#d62728",
+   "group": "H6 \u00b7 Copernicus EMS",
+   "event": "Fytia 2026",
+   "date": "",
+   "sensor": "VHR optical",
+   "simplify_m": 11,
+   "min_patch_ha": 0.5,
+   "file": "calibration_map/area_fytia_2026.geojson",
+   "n": 3,
+   "kb": 1,
+   "bounds": [
+    [
+     46.7073,
+     -19.317
+    ],
+    [
+     49.0061,
+     -16.4513
+    ]
+   ]
+  },
+  {
+   "id": "fl_gamane_2024",
+   "name": "Gamane 2024 flood extent",
+   "kind": "fill",
+   "color": "#1f77b4",
+   "group": "H5 \u00b7 UNOSAT",
+   "event": "Gamane 2024",
+   "date": "20240401",
+   "sensor": "TanDEM-X",
+   "simplify_m": 11,
+   "min_patch_ha": 0.5,
+   "file": "calibration_map/flood_gamane_2024.geojson",
+   "n": 154,
+   "kb": 235,
+   "bounds": [
+    [
+     49.9915,
+     -14.4595
+    ],
+    [
+     50.1917,
+     -14.2031
+    ]
+   ]
+  },
+  {
+   "id": "aa_gamane_2024",
+   "name": "Gamane 2024 analysed area",
+   "kind": "line",
+   "color": "#1f77b4",
+   "group": "H5 \u00b7 UNOSAT",
+   "event": "Gamane 2024",
+   "date": "20240401",
+   "sensor": "TanDEM-X",
+   "simplify_m": 11,
+   "min_patch_ha": 0.5,
+   "file": "calibration_map/area_gamane_2024.geojson",
+   "n": 1,
+   "kb": 0,
+   "bounds": [
+    [
+     49.9755,
+     -14.6413
+    ],
+    [
+     50.337,
+     -14.1318
+    ]
+   ]
+  },
+  {
+   "id": "fl_gezani_2026",
+   "name": "Gezani 2026 flood extent",
+   "kind": "fill",
+   "color": "#d62728",
+   "group": "H6 \u00b7 Copernicus EMS",
+   "event": "Gezani 2026",
+   "date": "",
+   "sensor": "VHR optical",
+   "simplify_m": 11,
+   "min_patch_ha": 0.5,
+   "file": "calibration_map/flood_gezani_2026.geojson",
+   "n": 263,
+   "kb": 261,
+   "bounds": [
+    [
+     47.4508,
+     -18.9918
+    ],
+    [
+     49.4115,
+     -17.7659
+    ]
+   ]
+  },
+  {
+   "id": "aa_gezani_2026",
+   "name": "Gezani 2026 analysed area",
+   "kind": "line",
+   "color": "#d62728",
+   "group": "H6 \u00b7 Copernicus EMS",
+   "event": "Gezani 2026",
+   "date": "",
+   "sensor": "VHR optical",
+   "simplify_m": 11,
+   "min_patch_ha": 0.5,
+   "file": "calibration_map/area_gezani_2026.geojson",
+   "n": 4,
+   "kb": 4,
+   "bounds": [
+    [
+     47.4508,
+     -19.0069
+    ],
+    [
+     49.524,
+     -17.6691
+    ]
+   ]
+  },
+  {
+   "id": "fl_jude_2025",
+   "name": "Jude 2025 flood extent",
+   "kind": "fill",
+   "color": "#1f77b4",
+   "group": "H5 \u00b7 UNOSAT",
+   "event": "Jude 2025",
+   "date": "20250309",
+   "sensor": "RCM",
+   "simplify_m": 11,
+   "min_patch_ha": 0.5,
+   "file": "calibration_map/flood_jude_2025.geojson",
+   "n": 1860,
+   "kb": 1344,
+   "bounds": [
+    [
+     49.1396,
+     -15.5121
+    ],
+    [
+     50.2629,
+     -13.4412
+    ]
+   ]
+  },
+  {
+   "id": "aa_jude_2025",
+   "name": "Jude 2025 analysed area",
+   "kind": "line",
+   "color": "#1f77b4",
+   "group": "H5 \u00b7 UNOSAT",
+   "event": "Jude 2025",
+   "date": "20250309",
+   "sensor": "RCM",
+   "simplify_m": 11,
+   "min_patch_ha": 0.5,
+   "file": "calibration_map/area_jude_2025.geojson",
+   "n": 1,
+   "kb": 0,
+   "bounds": [
+    [
+     49.1139,
+     -15.5357
+    ],
+    [
+     50.2885,
+     -13.2712
+    ]
+   ]
+  },
+  {
+   "id": "r3",
+   "group": "R3/R4 \u00b7 DesInventar & reports",
+   "name": "Reported impacts per district",
+   "kind": "district",
+   "color": "#e6550d",
+   "table": "calibration_map/district_impacts.json",
+   "file": "calibration_map/districts.geojson",
+   "n": 114,
+   "kb": 554,
+   "bounds": [
+    [
+     43.178,
+     -25.6058
+    ],
+    [
+     50.4848,
+     -11.9514
+    ]
+   ]
+  }
+ ]
+}

@@ -128,7 +128,7 @@ export default function App() {
           {tab === 'exposure' && <Exposure exposure={data.exposure} catchments={data.catchments} palette={palette} dark={dark} />}
           {tab === 'vulnerability' && <Vulnerability curves={data.vulnerability} exposure={data.exposure} palette={palette} />}
           {tab === 'risk' && <Risk palette={palette} dark={dark} />}
-          {tab === 'calibration' && <Calibration palette={palette} />}
+          {tab === 'calibration' && <Calibration palette={palette} dark={dark} />}
           {tab === 'compute' && <Compute benchmark={data.benchmark} prices={data.prices} palette={palette} />}
           {tab === 'method' && <Method />}
         </main>

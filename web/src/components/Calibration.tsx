@@ -4,6 +4,7 @@ import type { EChartsOption } from 'echarts'
 import { useEffect, useState, type ReactNode } from 'react'
 import { dataUrl } from '../data'
 import type { Palette } from '../theme'
+import { CalibrationMap } from './CalibrationMap'
 import { ANNUAL_LOSSES, MAJOR_EVENTS } from './calibrationLosses'
 import { Card, Chapter, ChapterIndex, Chart, DataTable, Figure, Info, Stat, Steps, Toggle, type ChapterEntry } from './ui'
 
@@ -85,17 +86,26 @@ function TextTable({ head, rows, caption }: { head: string[]; rows: (string | nu
 
 function Dataset({ id, title, kind, rows, children }: { id: string; title: string; kind: string; rows: [string, ReactNode][]; children?: ReactNode }) {
   return (
-    <Card title={`${id} · ${title}`} subtitle={kind}>
-      <dl className="grid gap-x-4 gap-y-2 text-sm md:grid-cols-[11rem_1fr]">
-        {rows.map(([k, v]) => (
-          <div key={k} className="contents">
-            <dt className="font-medium text-ink">{k}</dt>
-            <dd className="text-ink-2">{v}</dd>
-          </div>
-        ))}
-      </dl>
-      {children && <div className="mt-3">{children}</div>}
-    </Card>
+    <details className="group rounded-xl border border-line bg-surface p-4 md:p-5">
+      <summary className="flex cursor-pointer list-none items-start gap-2">
+        <span className="mt-0.5 inline-block text-accent transition-transform group-open:rotate-90">▸</span>
+        <span>
+          <span className="block text-base font-semibold text-ink">{id} · {title}</span>
+          <span className="mt-0.5 block text-sm text-ink-2">{kind}</span>
+        </span>
+      </summary>
+      <div className="mt-3">
+        <dl className="grid gap-x-4 gap-y-2 text-sm md:grid-cols-[11rem_1fr]">
+          {rows.map(([k, v]) => (
+            <div key={k} className="contents">
+              <dt className="font-medium text-ink">{k}</dt>
+              <dd className="text-ink-2">{v}</dd>
+            </div>
+          ))}
+        </dl>
+        {children && <div className="mt-3">{children}</div>}
+      </div>
+    </details>
   )
 }
 
@@ -153,7 +163,7 @@ function lossChart(p: Palette): EChartsOption {
   }
 }
 
-export function Calibration({ palette }: { palette: Palette }) {
+export function Calibration({ palette, dark }: { palette: Palette; dark: boolean }) {
   const [inv, setInv] = useState<Inventory>()
   useEffect(() => { fetch(dataUrl('calibration_inventory.json')).then((r) => r.json()).then(setInv) }, [])
   const [val, setVal] = useState<Validation>()
@@ -186,14 +196,21 @@ export function Calibration({ palette }: { palette: Palette }) {
           fluvial and coastal flooding are set aside; the impact catalogues bound the risk metrics from above. The datasets are consolidated in Chapter 2 and the simulation plan is in Chapter 3.
         </>}>
 
-        <Card title="Where the datasets lie" subtitle="Satellite flood maps mostly along the east and south-east coast, regional extents in the south-west and south-east, one urban catchment in the north-west, news reports island-wide">
-          <Figure src={fig('calinv_coverage.png')} maxHeight={720}
-            alt="Map of Madagascar with Groundsource event locations, Haruna flooded zones, Vatovavy Fitovinany flood-prone areas, UNOSAT and Copernicus EMS analysed areas and the Mahajanga model box" />
+        <Card title="Interactive map of the geospatial datasets" subtitle="Tick a layer to load it; H5 and H6 have one flood extent and one analysed area per event. Click a shape for its attributes; R3/R4 colours districts by the reported impact of the selected event.">
+          <CalibrationMap dark={dark} />
           <Info>
             None of these datasets is specific to pluvial flooding. The hazard data are therefore read through a separation of
-            flood drivers, and the impact data are used as upper bounds rather than calibration targets.
+            flood drivers, and the impact data are used as upper bounds rather than calibration targets. The satellite extents are
+            simplified for the web (patches under 0.5–5 ha dropped, edges smoothed by 10–90 m, shown per layer); scores in Chapter 3 use the original files.
+            R1 and R2 have no locations and are not mapped.
           </Info>
+          <Toggle title="Static overview map">
+            <Figure src={fig('calinv_coverage.png')} maxHeight={720}
+              alt="Map of Madagascar with Groundsource event locations, Haruna flooded zones, Vatovavy Fitovinany flood-prone areas, UNOSAT and Copernicus EMS analysed areas and the Mahajanga model box" />
+          </Toggle>
         </Card>
+
+        <p className="text-sm text-ink-2">Click a dataset to unfold its description, figures and tables.</p>
 
         <h3 className="pt-2 text-lg font-semibold text-ink">Hazard datasets</h3>
 
