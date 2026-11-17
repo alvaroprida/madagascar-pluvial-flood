@@ -1,0 +1,5 @@
+depth_class,package,direct_chf_per_hh,chf_per_hh,usd_per_hh,usd_per_person
+< 0.15 m,No response (not counted as flooded),0,0,0,0.0
+0.15 – 0.5 m,"Water in the house, habitable after cleaning: hygiene and water-treatment kits, health and protection outreach, basic-needs cash for half of the households",93,133,150,30.0
+0.5 – 1.0 m,"Household items lost, temporary displacement to accommodation sites: full basic-needs cash, WASH, health, protection, emergency shelter items (tarpaulins, kitchen sets) for half of the households",194,276,312,62.4
+> 1.0 m,Dwelling destroyed or uninhabitable (traditional huts): full package plus shelter kit and cash for shelter repair,298,426,481,96.2

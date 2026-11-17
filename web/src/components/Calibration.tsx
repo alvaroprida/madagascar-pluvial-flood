@@ -5,7 +5,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { dataUrl } from '../data'
 import type { Palette } from '../theme'
 import { ANNUAL_LOSSES, MAJOR_EVENTS } from './calibrationLosses'
-import { Card, Chapter, ChapterIndex, Chart, DataTable, Figure, Info, Stat, Steps, type ChapterEntry } from './ui'
+import { Card, Chapter, ChapterIndex, Chart, DataTable, Figure, Info, Stat, Steps, Toggle, type ChapterEntry } from './ui'
 
 const fig = (f: string) => dataUrl(`figures/${f}`)
 const fmt = (v: number, d = 0) => v.toLocaleString('en-US', { maximumFractionDigits: d, minimumFractionDigits: d })
@@ -171,7 +171,7 @@ export function Calibration({ palette }: { palette: Palette }) {
     ['R1 Cyclone impact catalogue', 'Reported impacts per cyclone and year', '2000–2022; 60 cyclones', 'National', 'Deaths, affected, damage (13 events; rest derived)', 'All cyclone causes', '–', 'Upper bound for average annual figures; event order of magnitude', 'Medium'],
     ['R2 Flood events (DFO and others)', 'Reported flood impacts', '1985–2022; 22 events', 'National', 'Deaths, affected', 'Flooding (21 cyclone, 1 rain)', '–', 'Event affected (flood only)', 'Medium'],
     ['R3 DesInventar', 'Disaster loss database', '1982–2024 (mostly ≤ 2018); 1,017 cyclone + 25 flood records', '113 districts', 'Deaths, affected, victims, houses destroyed/damaged, crops', 'Cyclone records all causes; flood records separate', '–', 'Event impacts per district; yearly totals', 'High'],
-    ['R4 ReliefWeb / BNGRC', 'Humanitarian reports', '1997–2026; 53 cyclone/flood disasters', 'National, some districts', 'Deaths, affected, displaced, houses destroyed/damaged/flooded', 'Narrative; houses flooded is flood-specific', '–', 'Event impacts for recent events; houses flooded vs modelled buildings', 'High for 2022–2026'],
+    ['R4 ReliefWeb / BNGRC / IFRC', 'Humanitarian reports; IFRC DREF and appeal documents', '1997–2026; 53 cyclone/flood disasters; 10 IFRC operations transcribed', 'National, regions, some districts and communes', 'Deaths, affected, displaced, houses flooded/damaged/destroyed; response budget by sector and people targeted', 'Narrative; houses flooded is flood-specific; Jan 2020 and Jan 2022 (Antananarivo) are floods without cyclone', '–', 'Event impacts; emergency-response cost rate by flood depth', 'High for 2020–2026'],
   ]
 
 
@@ -302,12 +302,15 @@ export function Calibration({ palette }: { palette: Palette }) {
           ['Limitations', 'No storm names (131 records carry a GLIDE code; the rest are matched by month); sparse after 2018; a block of July 2018 records with no storm that month is left out; affected and victims are used inconsistently.'],
         ]} />
 
-        <Dataset id="R4" title="ReliefWeb disasters and reports" kind="Humanitarian reports per disaster, 1997–2026" rows={[
+        <Dataset id="R4" title="ReliefWeb and IFRC reports" kind="Humanitarian reports per disaster, 1997–2026; IFRC operations with impacts and response budgets" rows={[
           ['Content', '62 disasters for Madagascar, 53 cyclones or floods, each with its GLIDE number and from 30 to 100 reports: OCHA flash updates, BNGRC situation reports, IFRC DREF reports, UNICEF situation reports, IOM displacement tracking, multi-sector assessments.'],
           ['Source', 'ReliefWeb (OCHA). The list and links are in the consolidated dataset; the API needs an approved application name.'],
           ['Flood drivers', 'Narrative; floods without cyclone appear as separate disasters (January 2003, March 2005, January 2020, January 2022).'],
-          ['Limitations', 'Reports, not data: district and commune figures sit in PDFs and are extracted by hand, so only for the validation events (Batsirai, Emnati, Ana, Cheneso, Gezani).'],
-        ]} />
+          ['IFRC operations', 'IFRC GO lists 37 Madagascar appeals (DREF, Emergency Appeals, early action protocols); for the flood and cyclone operations the DREF documents give BNGRC impact figures (displaced, houses flooded, damaged and destroyed, by region) and the planned budget by sector with the people targeted, i.e. the direct cost of the emergency response.'],
+          ['Limitations', 'Reports, not data: figures sit in PDFs and are extracted by hand; IFRC budgets cover the Red Cross share of the response only (5–20% of affected households), not the government or UN response.'],
+        ]}>
+          <IfrcCosts />
+        </Dataset>
 
         <Card title="Challenges" subtitle="Why none of the datasets can be used as it is">
           <dl className="grid gap-3 md:grid-cols-2">
@@ -483,5 +486,74 @@ function Plan({ runs }: { runs: Run[] }) {
           ]} />
       </Card>
     </>
+  )
+}
+
+interface IfrcOp {
+  event: string; code: string; type: string; driver: string; areas: string; deaths?: number | null; affected?: number | null
+  displaced?: number | null; flooded?: number | null; damaged?: number | null; destroyed?: number | null; budget: number; targeted: number
+  chf_per_person_targeted: number; coverage_hh_share?: number | null; displaced_share?: number | null
+  destroyed_share_of_flooded_or_destroyed?: number | null; budget_note?: string | null; unit_notes?: string | null; links: string
+}
+interface IfrcRate { depth_class: string; package: string; direct_chf_per_hh: number; chf_per_hh: number; usd_per_hh: number; usd_per_person: number }
+interface IfrcCostsData {
+  operations: IfrcOp[]; unit_costs: Record<string, number | string | null>[]; rates: IfrcRate[]
+  meta: { unit_costs_chf_per_hh: Record<string, number>; support_share: number; markup: number; chf_usd: number; persons_per_hh: number }
+}
+
+function IfrcCosts() {
+  const [d, setD] = useState<IfrcCostsData>()
+  useEffect(() => { fetch(dataUrl('emergency_costs.json')).then((r) => r.json()).then(setD) }, [])
+  if (!d) return <Info>Loading IFRC operations…</Info>
+  const v = (x: number | null | undefined) => (x == null ? '–' : fmt(x))
+  const p = (x: number | null | undefined) => (x == null ? '–' : `${fmt(100 * x, 0)}%`)
+  const m = d.meta
+  const SECT: [string, string][] = [['shelter', 'Shelter kits / emergency shelter'], ['cash', 'Basic-needs cash (multi-purpose)'], ['wash', 'Water, sanitation, hygiene'],
+    ['health', 'Health'], ['protection_cea', 'Protection, gender, inclusion + community engagement'], ['shelter_cash', 'Cash for shelter repair']]
+  const links = d.operations.flatMap((o) => o.links.split(' ').map((u) => [o.code, o.event, u]))
+  return (
+    <div className="space-y-4">
+      <h4 className="text-base font-semibold text-ink">IFRC operations: flood impacts and response budgets</h4>
+      <TextTable caption="Impacts as reported by BNGRC in the IFRC documents; budget = DREF allocation or appeal requirement (CHF, nominal); coverage = people targeted / affected"
+        head={['Event', 'Operation', 'Driver', 'Areas', 'Affected', 'Displaced', 'Houses flooded', 'Damaged', 'Destroyed', 'Budget (CHF)', 'Targeted', 'CHF / person', 'Coverage']}
+        rows={d.operations.map((o) => [o.event, `${o.code} · ${o.type}`, o.driver, o.areas, v(o.affected), v(o.displaced), v(o.flooded), v(o.damaged), v(o.destroyed),
+          fmt(o.budget), fmt(o.targeted), fmt(o.chf_per_person_targeted, 0), p(o.coverage_hh_share)])} />
+      <Info>
+        Flood-dominated events show what depth does to households: in the Antananarivo floods of January 2022 (no cyclone) 57% of the affected
+        were displaced but only 0.6% of the flooded-or-destroyed houses were destroyed; Gamane 2024 4%, Fytia 2026 14%, whereas wind-dominated
+        cyclones reach about 50% (Batsirai, Freddy). Displacement is the main humanitarian consequence of pluvial flooding; destruction is limited to
+        traditional huts under deep water. Unit values reported: {d.operations.filter((o) => o.unit_notes).map((o) => `${o.event}: ${o.unit_notes}`).join('; ')}.
+      </Info>
+
+      <h4 className="text-base font-semibold text-ink">Unit costs per household assisted</h4>
+      <TextTable caption={`Median over the 2020–2026 DREFs with sector budgets and targets (Jan 2020 floods, Jan 2022 Antananarivo, Freddy, Gamane, Fytia); support (IFRC secretariat + National Society) = ${fmt(100 * m.support_share, 0)}% of budgets, i.e. ×${m.markup} on direct costs; ${m.persons_per_hh} persons per household`}
+        head={['Sector', 'CHF per household (direct)']}
+        rows={SECT.map(([k, lab]) => [lab, fmt(m.unit_costs_chf_per_hh[k] ?? 0)])} />
+
+      <h4 className="text-base font-semibold text-ink">Emergency-response cost rate by flood depth</h4>
+      <TextTable caption={`Cost of the response package per affected household by maximum water depth at the dwelling, support included; USD at ${m.chf_usd} USD/CHF, nominal 2020–2026 prices`}
+        head={['Depth at the dwelling', 'Response package', 'Direct CHF / HH', 'CHF / HH', 'USD / HH', 'USD / person']}
+        rows={d.rates.map((r) => [r.depth_class, r.package, fmt(r.direct_chf_per_hh), fmt(r.chf_per_hh), fmt(r.usd_per_hh), fmt(r.usd_per_person, 1)])} />
+      <Info>
+        Use: for each design event, sum over flooded residential pixels the population in each depth class divided by {m.persons_per_hh}, times the
+        rate of the class. This gives the cost of a full Red Cross-type response to every affected household (an upper reference for the
+        humanitarian response). IFRC alone reached 5–20% of affected households in these operations, so its share is that fraction; government
+        (BNGRC), UN agencies and NGOs cover the rest at comparable unit costs. The depth thresholds follow the pattern above (displacement from
+        about 0.5 m, destruction of traditional huts above about 1 m) and should be checked against modelled buildings once the event runs are done.
+      </Info>
+
+      <Toggle title={`Documents (${links.length})`}>
+        <ul className="list-disc space-y-1 pl-5 text-sm">
+          {links.map(([c, e, u]) => <li key={u}><span className="text-ink">{c}</span> · {e}: <a className="break-all text-accent underline underline-offset-2" href={u} target="_blank" rel="noreferrer">{u}</a></li>)}
+          <li>IFRC GO, all Madagascar appeals: <a className="text-accent underline underline-offset-2" href="https://go.ifrc.org/countries/109" target="_blank" rel="noreferrer">go.ifrc.org</a></li>
+        </ul>
+      </Toggle>
+      <p className="text-sm text-ink-2">
+        Download:{' '}
+        {['ifrc_operations.csv', 'emergency_unit_costs.csv', 'emergency_cost_rates.csv'].map((f, i) => (
+          <span key={f}>{i > 0 && ' · '}<a className="text-accent underline underline-offset-2" href={dataUrl(`validation/${f}`)} download>{f}</a></span>
+        ))}
+      </p>
+    </div>
   )
 }

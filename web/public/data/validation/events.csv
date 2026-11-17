@@ -58,11 +58,12 @@ Idai 2019,2019-03-10,Cyclone,Idai,TC-2019-000021-MOZ,IDAI,1.0,1100.0,,True,,,,,,
 Kenneth 2019,2019-04-23,Cyclone,Kenneth,TC-2019-000038-MOZ,,,,,,,,,,,,,,,,,,,,,,,,,https://reliefweb.int/disaster/tc-2019-000038-moz,4.0,,,,GPM IMERG Final,,
 Belna 2019,2019-12-09,Cyclone,Belna,,BELNA,4.0,1742.0,25000000.0,False,,,,,,,,,,,,,,,,,,,,,3.0,,,,GPM IMERG Final,,1742.0
 Calvinia 2019,2019-12-25,Cyclone,Calvinia,,,,,,,,,,,,,,,,,,,,,,,,,,,3.0,,,,GPM IMERG Final,,
+Floods Jan 2020,2020-01-20,Flood (no cyclone),,FL-2020-000019-MDG,,,,,,,,,,,,,,,,106846.0,31.0,,16031.0,,417.0,,,,https://reliefweb.int/disaster/fl-2020-000019-mdg,,,,,GPM IMERG Final,,106846.0
 Diane 2020,2020-01-22,Cyclone,Diane,,DIANE,31.0,107000.0,,True,,,,,,,,,,,,,,,,,,,,,28.0,9475.0,UNOSAT,,GPM IMERG Final,,107000.0
 Francisco 2020,2020-02-15,Cyclone,Francisco,,FRANCISCO,1.0,,,True,,,,,,,,,,,,,,,,,,,,,8.0,,,,GPM IMERG Final,,
 Herold 2020,2020-03-14,Cyclone,Herold,,HEROLD,5.0,3200.0,,True,,,,,,,,,,,,,,,,,,,,,5.0,,,,GPM IMERG Final,,3200.0
 Eloise 2021,2021-01-19,Cyclone,Eloise,TC-2021-000008-MOZ,ELOISE,1.0,,,False,,,,,,,,,,,,,,,,,,,,https://reliefweb.int/disaster/tc-2021-000008-moz,1.0,,,,GPM IMERG Final,,
-Floods Jan 2022 (Antananarivo),2022-01-17,Flood (no cyclone),,ST-2022-000138-MDG,,,,,,,,,,,,,,,,,,,,,,,,,https://reliefweb.int/disaster/st-2022-000138-mdg,,,,,GPM IMERG Final,"Validation (risk, with Ana)",
+Floods Jan 2022 (Antananarivo),2022-01-17,Flood (no cyclone),,ST-2022-000138-MDG,,,,,,,,,,,,,,,,47261.0,,,26728.0,,41.0,6654.0,,,https://reliefweb.int/disaster/st-2022-000138-mdg,,,,,GPM IMERG Final,"Validation (risk, with Ana)",47261.0
 Ana 2022,2022-01-22,Cyclone,Ana,ST-2022-000088-MOZ,ANA,58.0,960000.0,658000000.0,True,,,,,,,,,,,,,55.0,,,,,,,https://reliefweb.int/disaster/st-2022-000088-moz,44.0,,,,GPM IMERG Final,"Validation (risk, hit rate)",960000.0
 Batsirai 2022,2022-02-05,Cyclone,Batsirai,TC-2022-000160-MDG,BATSIRAI,123.0,,,True,Cyclone Batsirai,80.0,112000.0,Croix rouge (2022),,,,,,,,121.0,,29000.0,3236.0,8364.0,7098.0,,,https://reliefweb.int/disaster/tc-2022-000160-mdg,27.0,671.9,UNOSAT,,GPM IMERG Final,"Validation (hazard, risk)",112000.0
 Cliff 2022,2022-02-13,Cyclone,Cliff,,,,,,,,,,,,,,,,,,,,,,,,,,,14.0,,,,GPM IMERG Final,,
@@ -70,11 +71,11 @@ Dumako 2022,2022-02-15,Cyclone,Dumako,,DUMAKO,14.0,,,False,,,,,,,,,,,,,,,,,,,,,2
 Emnati 2022,2022-02-23,Cyclone,Emnati,TC-2022-000175-MDG,EMNATI,6.0,,,False,,,,,,,,,,,,15.0,,,11461.0,6118.0,5826.0,,169000.0,https://reliefweb.int/disaster/tc-2022-000175-mdg,9.0,678.7,UNOSAT,,GPM IMERG Final,"Validation (hazard, risk)",
 Gombe 2022,2022-03-08,Cyclone,Gombe,TC-2022-000184-MOZ,GOMBE,2.0,,,False,,,,,,,,,,,,,,,,,,,,https://reliefweb.int/disaster/tc-2022-000184-moz,,,,,GPM IMERG Final,,
 Cheneso 2023,2023-01-19,Cyclone,Cheneso,TC-2023-000012-MDG,,,,,,,,,,,,,,,,90870.0,,,34100.0,13350.0,,,,,https://reliefweb.int/disaster/tc-2023-000012-mdg,19.0,,,GESCOD 1 m model (Mahajanga),GPM IMERG Final,Calibration (hazard),90870.0
-Freddy 2023,2023-02-21,Cyclone,Freddy,TC-2023-000023-MDG,,,,,,,,,,,,,,,,,,,,,,,,,https://reliefweb.int/disaster/tc-2023-000023-mdg,8.0,55.3,UNOSAT,,GPM IMERG Final,Negative test (coastal/fluvial),
+Freddy 2023,2023-02-21,Cyclone,Freddy,TC-2023-000023-MDG,,,,,,,,,,,,,,,,72351.0,,,24358.0,909.0,5550.0,5938.0,,,https://reliefweb.int/disaster/tc-2023-000023-mdg,8.0,55.3,UNOSAT,,GPM IMERG Final,Negative test (coastal/fluvial),72351.0
 Alvaro 2024,2024-01-01,Cyclone,Alvaro,,,,,,,,,,,,,,,,,,,,,,,,,,,13.0,0.0,UNOSAT,,GPM IMERG Final,,
 Eleanor 2024,2024-02-26,Cyclone,Eleanor,,,,,,,,,,,,,,,,,,,,,,,,,,,2.0,,,,GPM IMERG Final,,
 Filipo 2024,2024-03-03,Cyclone,Filipo,,,,,,,,,,,,,,,,,,,,,,,,,,,5.0,,,,GPM IMERG Final,,
-Gamane 2024,2024-03-27,Cyclone,Gamane,TC-2024-000042-MDG,,,,,,,,,,1.0,0.0,0.0,0.0,0.0,0.0,,,,,,,,,,https://reliefweb.int/disaster/tc-2024-000042-mdg,30.0,10.9,UNOSAT,,GPM IMERG Final,,0.0
+Gamane 2024,2024-03-27,Cyclone,Gamane,TC-2024-000042-MDG,,,,,,,,,,1.0,0.0,0.0,0.0,0.0,0.0,89465.0,14.0,,26302.0,,779.0,18834.0,,,https://reliefweb.int/disaster/tc-2024-000042-mdg,30.0,10.9,UNOSAT,,GPM IMERG Final,,89465.0
 Chido 2024,2024-12-13,Cyclone,Chido,TC-2024-000224-MOZ,,,,,,,,,,1.0,0.0,0.0,0.0,0.0,0.0,,,,,,,,,,https://reliefweb.int/disaster/tc-2024-000224-moz,1.0,,,,GPM IMERG Final,,0.0
 Dikeledi 2025,2025-01-11,Cyclone,Dikeledi,TC-2025-000009-MDG,,,,,,,,,,,,,,,,,,,,,,,,,https://reliefweb.int/disaster/tc-2025-000009-mdg,18.0,,,,GPM IMERG Final,,
 Elvis 2025,2025-01-28,Cyclone,Elvis,,,,,,,,,,,,,,,,,,,,,,,,,,,1.0,,,,GPM IMERG Final,,
@@ -84,5 +85,5 @@ Honde 2025,2025-02-28,Cyclone,Honde,TC-2025-000025-MDG,,,,,,,,,,,,,,,,,,,,,,,,,h
 Jude 2025,2025-03-07,Cyclone,Jude,TC-2025-000027-MOZ,,,,,,,,,,,,,,,,,,,,,,,,,https://reliefweb.int/disaster/tc-2025-000027-moz,18.0,99.9,UNOSAT,,GPM IMERG Final,,
 Grant 2026,2026-01-07,Cyclone,Grant,,,,,,,,,,,,,,,,,,,,,,,,,,,13.0,,,,GPM IMERG Late,,
 Ewetse 2026,2026-01-21,Cyclone,Ewetse,,,,,,,,,,,,,,,,,,,,,,,,,,,2.0,,,,GPM IMERG Late,,
-Fytia 2026,2026-01-31,Cyclone,Fytia,TC-2026-000009-MDG,,,,,,,,,,,,,,,,,,,,,,,,,https://reliefweb.int/disaster/tc-2026-000009-mdg,,5.7,Copernicus EMS,,GPM IMERG Late,,
+Fytia 2026,2026-01-31,Cyclone,Fytia,TC-2026-000009-MDG,,,,,,,,,,,,,,,,60758.0,7.0,,19708.0,,1776.0,10853.0,,,https://reliefweb.int/disaster/tc-2026-000009-mdg,,5.7,Copernicus EMS,,GPM IMERG Late,,60758.0
 Gezani 2026,2026-02-10,Cyclone,Gezani,TC-2026-000015-MDG,,,,,,,,,,,,,,,,430000.0,62.0,,15948.0,49129.0,25044.0,14330.0,13.0,,https://reliefweb.int/disaster/tc-2026-000015-mdg,,16.4,Copernicus EMS,,GPM IMERG Late,"Validation (hazard, urban)",430000.0

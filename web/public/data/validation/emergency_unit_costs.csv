@@ -1,0 +1,6 @@
+event,code,budget_chf,households_targeted,chf_per_hh_total,support_share,direct_chf,shelter_chf_per_hh,cash_chf_per_hh,health_chf_per_hh,wash_chf_per_hh,protection_chf_per_hh,cea_chf_per_hh,protection_cea_chf_per_hh
+Floods Jan 2020,MDRMG016,307356,1000.0,307.4,0.3,207925,148.1,71.4,12.0,28.3,,,
+Floods Jan 2022 (Antananarivo),MDRMG018,428609,2000.0,214.3,0.2,338351,32.3,100.4,13.8,42.8,,,
+Freddy 2023,MDRMG020,399790,1400.0,285.6,0.4,252076,67.8,47.2,3.4,26.2,28.7,6.8,35.5
+Gamane 2024,MDRMG022,148708,2000.0,74.4,0.3,100924,,72.6,,4.0,0.6,8.0,8.5
+Fytia 2026,MDRMG027,394497,1900.0,207.6,0.2,304663,118.9,,10.2,32.0,81.4,6.7,55.6
