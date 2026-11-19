@@ -166,7 +166,7 @@ export function CalibrationSetup({ palette, dark }: { palette: Palette; dark: bo
         <table className="w-full text-sm"><tbody className="[&_td]:border-b [&_td]:border-line [&_td]:py-1.5 [&_td]:pr-3">
           {[
             ['Grid', `${s.res_m} m, UTM 38S; sub-grid ${s.subgrid_m} m from FABDEM (bare-earth, 30 m); output downscaled to ${s.downscale_m} m`, 'GESCOD: 1 m mesh on a local survey, RN4 embankment and FITIM bridge culverts included'],
-            ['Roughness', `Manning ${s.manning} everywhere (calibration parameter)`, `GESCOD: ${s.manning} everywhere`],
+            ['Roughness', 'Manning from land cover (ESA/VITO classes: built-up 0.10, cropland 0.037, grass 0.034, shrubs 0.05, forest 0.10–0.11), in the sub-grid tables; calibrated with one factor on the whole table', 'GESCOD: 0.04 everywhere'],
             ['Infiltration', `SCS curve number, ${s.gcn_arc} (wet soils, as for cyclone design storms); catchment mean ${s.cn_mean_catchment}`, `GESCOD: CN ${s.gescod_cn} (basin mean)`],
             ['Boundaries', 'Sea edge: GESCOD tide as water level; land edge: free outflow', 'GESCOD: tide at the downstream limit'],
             ['Drainage network', 'Not represented (no culverts, canal only as resolved by the terrain)', 'GESCOD: main canal and culverts'],
