@@ -6,12 +6,16 @@ import Map, { Layer, Source } from 'react-map-gl/maplibre'
 import { dataUrl } from '../data'
 import { fmt } from '../format'
 import type { Palette } from '../theme'
-import { Chart, Info, Stat, Toggle } from './ui'
+import { Chart, Figure, Info, Stat, Toggle } from './ui'
 
 setWorkerUrl(workerUrl)
 
 type Corners = [[number, number], [number, number], [number, number], [number, number]]
 interface Img { name: string; file: string; coordinates: Corners; legend: { value: number | string; color: string }[] }
+interface Score {
+  tag: string; rain: string; obs_flooded_ha: number; mod_flooded_ha: number; csi: number; hit_rate: number; far: number; bias: number
+  depth_median_error_m: number; depth_p90_abs_error_m: number; mod_max_m: number; obs_max_m: number
+}
 interface Setup {
   event: string; basin_id: string; res_m: number; subgrid_m: number; downscale_m: number; manning: number; gcn_arc: string
   cn_mean_catchment: number; gescod_cn: number; areas_km2: Record<string, number>; cells: { catchment: number; domain: number }
@@ -20,6 +24,9 @@ interface Setup {
   rainfall: { t: string; i: number }[]; tide_series: { t: string; z: number }[]
   images: Record<string, Img>; layers: string; h4_image: { file: string; coordinates: Corners }
   bounds: Record<'catchment' | 'valley', [[number, number], [number, number]]>
+  rainfall_gescod?: { t: string; i: number }[]
+  gescod_rain?: { window_mm: number; peak_mm_hr: number; max_acc_mm: Record<string, number> }
+  scores?: Score[]; compare_figure?: string
 }
 
 const SAT = {
@@ -97,17 +104,19 @@ function forcingChart(p: Palette, s: Setup): EChartsOption {
       { type: 'value', name: 'Tide (m NGM)', ...axis, splitLine: { show: false }, min: -2.5, max: 2.5 },
     ],
     series: [
-      { name: 'IMERG rainfall, catchment mean (30 min)', type: 'bar', barWidth: '90%', itemStyle: { color: p.accent },
-        data: s.rainfall.map((r) => [ms(r.t), r.i]),
+      { name: 'GESCOD rainfall, basin (used)', type: 'bar', barWidth: '90%', itemStyle: { color: p.accent },
+        data: (s.rainfall_gescod ?? []).map((r) => [ms(r.t), r.i]),
         markArea: { itemStyle: { color: 'rgba(44,160,44,0.10)' }, label: { color: p['text-secondary'], fontSize: 11 },
           data: [[{ name: 'Simulated (GESCOD window)', xAxis: ms(s.window_utc[0]) }, { xAxis: ms(s.window_utc[1]) }]] } },
+      { name: 'IMERG V07B, catchment mean (not used)', type: 'line', step: 'end', showSymbol: false, lineStyle: { width: 1, color: p['text-muted'] },
+        itemStyle: { color: p['text-muted'] }, data: s.rainfall.map((r) => [ms(r.t), r.i]) },
       { name: 'Tide at Mahajanga (GESCOD)', type: 'line', yAxisIndex: 1, showSymbol: false, lineStyle: { width: 1.5, color: '#8c564b' },
         itemStyle: { color: '#8c564b' }, data: s.tide_series.map((r) => [ms(r.t), r.z]) },
     ],
   }
 }
 
-/** Chapter 3.1: Cheneso calibration set-up (results added after the runs). */
+/** Chapter 3.1: benchmark of the production set-up against the GESCOD local model for Cheneso. */
 export function CalibrationSetup({ palette, dark }: { palette: Palette; dark: boolean }) {
   const [s, setS] = useState<Setup>()
   const [img, setImg] = useState('dem')
@@ -117,21 +126,23 @@ export function CalibrationSetup({ palette, dark }: { palette: Palette; dark: bo
   const a = s.areas_km2
   const ratio = a.catchment / a.h4_footprint
   return (
-    <Toggle title="3.1 · Model calibration: Cyclone Cheneso, Mahajanga (January 2023)">
+    <Toggle title="3.1 · Benchmark against a local model: Cyclone Cheneso, Mahajanga (January 2023)">
       <div className="space-y-3 text-sm text-ink-2">
-        <p><b className="text-ink">Purpose.</b> Fix the parameters of the pluvial model (roughness, infiltration, rainfall factor) by
-          reproducing the only detailed depth map available: GESCOD's 1 m HEC-RAS model of the Metzinger valley for Cheneso. The parameters are
-          then frozen for the validation events (3.2) and the national flood maps. The run uses the production set-up: {s.res_m} m grid with
-          {' '}{s.subgrid_m} m sub-grid, depths downscaled to {s.downscale_m} m on FABDEM.</p>
-        <p><b className="text-ink">Event.</b> Cyclone Cheneso brought heavy rain over Mahajanga during 19–26 January 2023; GESCOD simulated
-          19–23 January, when rain coincided with exceptional spring tides (22–23 January), and found return periods close to 5 years for
-          the rainfall. The comparison uses the same window, rainfall product and tide, so differences come from the models.</p>
+        <p><b className="text-ink">Purpose.</b> Check that the production set-up ({s.res_m} m grid with {s.subgrid_m} m sub-grid, depths
+          downscaled to {s.downscale_m} m on FABDEM, land-cover roughness, wet-soil curve numbers) gives a flood of the same order of magnitude as
+          a detailed local model: GESCOD's 1 m HEC-RAS model of the Metzinger valley for Cheneso. No parameter is tuned: a fit to one urban basin
+          would absorb its embankment, survey and drainage network and would not hold elsewhere. Sensitivity runs show whether the conclusion
+          depends on the parameters.</p>
+        <p><b className="text-ink">Event and forcing.</b> Cyclone Cheneso, 19–23 January 2023, the period GESCOD simulated, when heavy rain
+          coincided with exceptional spring tides (22–23 January). Both models get the same rainfall (GESCOD's half-hourly GPM series over the
+          basin, digitised from their figure 8) and the same tide at the sea edge (their figure 10). Differences therefore come from the models:
+          terrain, structures, roughness, infiltration and grid.</p>
       </div>
       <div className="grid gap-3 sm:grid-cols-4">
         <Stat label="GESCOD model area" value={`${fmt(a.h4_footprint, 1)} km²`} sub="basin of 500 ha (report)" />
         <Stat label="Our catchment" value={`${fmt(a.catchment, 0)} km²`} sub={`${fmt(ratio, 0)}× larger; ${fmt(s.cells.catchment)} cells`} />
-        <Stat label="Proposed domain" value={`${fmt(a.domain, 1)} km²`} sub={`about ${fmt(s.cells.domain)} cells at ${s.res_m} m`} />
-        <Stat label="Rain in window" value={`${fmt(s.rain_window_mm, 0)} mm`} sub={`peak ${s.rain_peak_mm_hr} mm/h (IMERG, 30 min)`} />
+        <Stat label="Benchmark domain" value={`${fmt(a.domain, 1)} km²`} sub={`about ${fmt(s.cells.domain)} cells at ${s.res_m} m`} />
+        <Stat label="Rain in window (GESCOD)" value={`${fmt(s.gescod_rain?.window_mm ?? 0, 0)} mm`} sub={`peak ${s.gescod_rain?.peak_mm_hr ?? '–'} mm/h; IMERG V07B: ${fmt(s.rain_window_mm, 0)} mm`} />
       </div>
 
       <Toggle title="Model domain">
@@ -142,7 +153,7 @@ export function CalibrationSetup({ palette, dark }: { palette: Palette; dark: bo
         </div>
         <SetupMap s={s} dark={dark} outlines={['catchment', 'draining', 'domain', 'h4_footprint']} h4 focus={focus} />
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-2">
-          {[['catchment', 'Model catchment 1070036890'], ['h4_footprint', 'GESCOD model area (H4, depth shown)'], ['draining', 'Area draining to it on FABDEM'], ['domain', 'Proposed calibration domain (H4 area + 1 km)']].map(([id, lab]) => (
+          {[['catchment', 'Model catchment 1070036890'], ['h4_footprint', 'GESCOD model area (H4, depth shown)'], ['draining', 'Area draining to it on FABDEM'], ['domain', 'Benchmark domain (H4 area + 1 km)']].map(([id, lab]) => (
             <span key={id} className="flex items-center gap-1.5"><span className="inline-block h-0.5 w-5" style={{ background: OUTLINE[id].color }} />{lab} ({fmt(a[id], 1)} km²)</span>
           ))}
         </div>
@@ -150,7 +161,7 @@ export function CalibrationSetup({ palette, dark }: { palette: Palette; dark: bo
           The national set-up models whole catchments; this one ({fmt(a.catchment, 0)} km²) is about {fmt(ratio, 0)} times the GESCOD
           area, and most of it lies inland and does not drain to the valley. On FABDEM {fmt(a.draining, 0)} km² route
           through the valley, probably because the 30 m terrain model misses the RN4 road embankment and the canal works that close the 500 ha basin
-          described by GESCOD. Proposed: model only the GESCOD area plus a 1 km halo, with the GESCOD tide on the sea edge, as GESCOD did. This cuts the cells
+          described by GESCOD. Adopted: model only the GESCOD area plus a 1 km halo, with the GESCOD tide on the sea edge, as GESCOD did. This cuts the cells
           by about {fmt(s.cells.catchment / Math.max(s.cells.domain, 1), 0)} times (minutes per run instead of tens of minutes) and keeps the
           comparison like for like. The parameters found apply to the whole-catchment production runs.
         </Info>
@@ -166,7 +177,7 @@ export function CalibrationSetup({ palette, dark }: { palette: Palette; dark: bo
         <table className="w-full text-sm"><tbody className="[&_td]:border-b [&_td]:border-line [&_td]:py-1.5 [&_td]:pr-3">
           {[
             ['Grid', `${s.res_m} m, UTM 38S; sub-grid ${s.subgrid_m} m from FABDEM (bare-earth, 30 m); output downscaled to ${s.downscale_m} m`, 'GESCOD: 1 m mesh on a local survey, RN4 embankment and FITIM bridge culverts included'],
-            ['Roughness', 'Manning from land cover (ESA/VITO classes: built-up 0.10, cropland 0.037, grass 0.034, shrubs 0.05, forest 0.10–0.11), in the sub-grid tables; calibrated with one factor on the whole table', 'GESCOD: 0.04 everywhere'],
+            ['Roughness', 'Manning from land cover (ESA/VITO classes: built-up 0.10, cropland 0.037, grass 0.034, shrubs 0.05, forest 0.10–0.11), in the sub-grid tables; varied by a factor in the sensitivity runs', 'GESCOD: 0.04 everywhere'],
             ['Infiltration', `SCS curve number, ${s.gcn_arc} (wet soils, as for cyclone design storms); catchment mean ${s.cn_mean_catchment}`, `GESCOD: CN ${s.gescod_cn} (basin mean)`],
             ['Boundaries', 'Sea edge: GESCOD tide as water level; land edge: free outflow', 'GESCOD: tide at the downstream limit'],
             ['Drainage network', 'Not represented (no culverts, canal only as resolved by the terrain)', 'GESCOD: main canal and culverts'],
@@ -177,15 +188,66 @@ export function CalibrationSetup({ palette, dark }: { palette: Palette; dark: bo
       <Toggle title="Rainfall and tide">
         <Chart option={forcingChart(palette, s)} height={340} label="Half-hourly IMERG rainfall over the catchment from 18 to 28 January 2023 with the simulated window shaded, and the predicted tide at Mahajanga" />
         <Info>
-          Rainfall: GPM IMERG Final V07B, half-hourly, averaged over the catchment and applied uniformly; {fmt(s.rain_window_mm, 0)} mm in the
-          simulated window ({fmt(s.rain_event_mm, 0)} mm over the whole event). GESCOD used the same product (NASA Giovanni). IMERG smooths short
-          bursts, so peaks are likely underestimated; a rainfall factor is one of the calibration parameters. Tide: {s.tide.source}; converted to
-          {' '}{s.tide.datum}, taken as equal to FABDEM's mean sea level, and shifted from local time to UTC (−3 h); range {fmt(s.tide.min, 2)} to
-          +{fmt(s.tide.max, 2)} m. Rain and tide are not available for 24–26 January in the GESCOD study, so these days are left out.
+          Rainfall: GESCOD's series (figure 8: half-hourly GPM averaged over the 500 ha basin, from NASA Giovanni in 2023), digitised and
+          checked against their figure 9 (maxima over 1, 3, 6, 12 and 24 h of {Object.values(s.gescod_rain?.max_acc_mm ?? {}).map((v) => fmt(v, 0)).join(', ')} mm);
+          applied uniformly; {fmt(s.gescod_rain?.window_mm ?? 0, 0)} mm in the window. The current IMERG Final V07B gives about half as much,
+          even in the single cell over the valley ({fmt(s.rain_window_mm, 0)} mm, peak {s.rain_peak_mm_hr} mm/h for the catchment mean): GESCOD
+          probably used an earlier IMERG version. Tide: {s.tide.source}; converted to {s.tide.datum}, taken as equal to FABDEM's mean sea level,
+          and shifted from local time to UTC (−3 h); range {fmt(s.tide.min, 2)} to +{fmt(s.tide.max, 2)} m. The rainfall chart is taken as UTC.
         </Info>
       </Toggle>
 
-      <Info>Results and conclusions will be added here after the calibration runs.</Info>
+      {s.scores && <Results s={s} />}
     </Toggle>
+  )
+}
+
+const RUN_LABEL: Record<string, string> = {
+  base: 'Base: production set-up', rough_x0p5: 'Roughness × 0.5', rough_x2: 'Roughness × 2', arcii: 'Average soil moisture (ARCII)',
+  gescod_inputs: "GESCOD's roughness (0.04) and curve number (84.3)", imerg_catchment: 'Base with IMERG V07B catchment rainfall (not GESCOD forcing)',
+}
+const ORDER = ['base', 'rough_x0p5', 'rough_x2', 'arcii', 'gescod_inputs', 'imerg_catchment']
+
+function Results({ s }: { s: Setup }) {
+  const sc = ORDER.map((t) => s.scores!.find((x) => x.tag === t)).filter((x): x is Score => !!x)
+  const b = sc.find((x) => x.tag === 'base')!
+  const sens = sc.filter((x) => x.tag !== 'imerg_catchment')
+  const ratios = sens.map((x) => x.obs_flooded_ha / x.mod_flooded_ha)
+  const csis = sens.map((x) => x.csi)
+  const err = sens.map((x) => x.depth_median_error_m)
+  const f = (v: number, d = 2) => fmt(v, d)
+  return (
+    <>
+      <h4 className="pt-2 text-base font-semibold text-ink">Results</h4>
+      {s.compare_figure && <Figure src={dataUrl(s.compare_figure)} alt="Maximum depth from the GESCOD model and from this model for Cheneso in the Metzinger valley, and a map of where both, only GESCOD or only this model flood" />}
+      <table className="w-full text-sm"><thead><tr className="text-left text-ink-3 [&_th]:pb-1 [&_th]:pr-3">
+        <th>Run</th><th>Flooded (ha)</th><th>GESCOD / model</th><th>CSI</th><th>Hit rate</th><th>False alarms</th><th>Median depth error</th>
+      </tr></thead><tbody className="[&_td]:border-t [&_td]:border-line [&_td]:py-1.5 [&_td]:pr-3">
+        {sc.map((x) => (
+          <tr key={x.tag} className={x.tag === 'base' ? 'font-semibold text-ink' : x.tag === 'imerg_catchment' ? 'text-ink-3' : 'text-ink-2'}>
+            <td>{RUN_LABEL[x.tag] ?? x.tag}</td><td>{fmt(x.mod_flooded_ha, 0)} / {fmt(x.obs_flooded_ha, 0)}</td>
+            <td>×{f(x.obs_flooded_ha / x.mod_flooded_ha, 1)}</td><td>{f(x.csi)}</td><td>{f(x.hit_rate)}</td><td>{f(x.far)}</td><td>{f(x.depth_median_error_m)} m</td>
+          </tr>))}
+      </tbody></table>
+      <p className="text-xs text-ink-3">Flooded = maximum depth above 15 cm, inside the GESCOD model area, on a 30 m grid (GESCOD's 1 m depths averaged). False alarms = false alarm ratio. Depth error = this model minus GESCOD where GESCOD floods.</p>
+
+      <h4 className="pt-2 text-base font-semibold text-ink">Conclusions</h4>
+      <ul className="list-disc space-y-1.5 pl-5 text-sm text-ink-2">
+        <li><b className="text-ink">Same order of magnitude, on the low side.</b> With the same rainfall and tide, the production set-up floods {fmt(b.mod_flooded_ha, 0)} ha
+          against {fmt(b.obs_flooded_ha, 0)} ha for GESCOD (×{f(b.obs_flooded_ha / b.mod_flooded_ha, 1)}), with depths {f(Math.abs(b.depth_median_error_m))} m
+          shallower (median) where GESCOD floods: within the factor 2 and ±0.5 m set as criteria, but always below the local model.</li>
+        <li><b className="text-ink">Where it agrees and where it does not.</b> The flooded valley axis is reproduced (hit rate {f(b.hit_rate)}, few false alarms: {f(b.far)}).
+          The deep basin behind the RN4 embankment near the canal outlet (1.5–2 m in GESCOD) and the side valleys are missed: our model has neither
+          the embankment nor the culverts that the high tides block, and FABDEM has half of the surveyed area below 2 m (49 against 101 ha).</li>
+        <li><b className="text-ink">Not a parameter problem.</b> Across the sensitivity runs the ratio stays between ×{f(Math.min(...ratios), 1)} and ×{f(Math.max(...ratios), 1)},
+          the CSI between {f(Math.min(...csis))} and {f(Math.max(...csis))} and the median depth error between {f(Math.min(...err))} and {f(Math.max(...err))} m.
+          Rougher land floods slightly more; soil moisture hardly matters with about 490 mm of rain; GESCOD's own roughness and curve number flood
+          less, not more. Tuning would not close the gap, which comes from terrain and structures.</li>
+        <li><b className="text-ink">Forcing matters most.</b> With the current IMERG V07B catchment rainfall (about half of GESCOD's) the flooded area drops to
+          {' '}{fmt(sc.find((x) => x.tag === 'imerg_catchment')?.mod_flooded_ha ?? 0, 0)} ha: the rainfall product and its spatial averaging weigh more than any parameter.</li>
+        <li><b className="text-ink">Implication for the national maps.</b> Keep the production parameters. Expect depths and extents to be underestimated in
+          low-lying towns behind embankments where the tide blocks drainage; in such places local models or surveyed terrain are needed.</li>
+      </ul>
+    </>
   )
 }
