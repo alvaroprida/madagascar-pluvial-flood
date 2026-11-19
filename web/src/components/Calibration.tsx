@@ -5,6 +5,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { dataUrl } from '../data'
 import type { Palette } from '../theme'
 import { CalibrationMap } from './CalibrationMap'
+import { CalibrationSetup } from './CalibrationSetup'
 import { ANNUAL_LOSSES, MAJOR_EVENTS } from './calibrationLosses'
 import { Card, Chapter, ChapterIndex, Chart, DataTable, Figure, Info, Stat, Steps, Toggle, type ChapterEntry } from './ui'
 
@@ -247,7 +248,7 @@ export function Calibration({ palette, dark }: { palette: Palette; dark: boolean
 
         <Dataset id="H4" title="Cyclone Cheneso, Mahajanga (January 2023, modelled)" kind="Detailed 2D urban drainage model, maximum water depth, 1 m" rows={[
           ['Content', <>Maximum depth over the Metzinger valley, a 500 ha urban catchment where 101 ha lie below 2 m. {n(m?.wet_km2, 1)} km² wet above 5 cm, {n(m?.area_gt_0p5m_km2, 1)} km² above 0.5 m; median {n(m?.median_m, 2)} m, 99th percentile {n(m?.p99_m, 1)} m (main canal and low basin).</>],
-          ['Source', 'GESCOD (2023), Étude de drainage du vallon Metzinger et assistance communale à la gestion du réseau, Commune Urbaine de Mahajanga. Model forced by observed 30-minute rainfall during Cheneso and the observed tide. It also simulates a 10-year 24 h storm with a mean spring tide and gives local rainfall frequencies.'],
+          ['Source', 'GESCOD (2023), Étude de drainage du vallon Metzinger et assistance communale à la gestion du réseau, Commune Urbaine de Mahajanga. HEC-RAS 2D model (Manning 0.04, curve number 84.3) forced by half-hourly GPM rainfall over 19–23 January 2023 and the predicted tide (Tide4Fishing). It also simulates a 10-year 24 h storm with a mean spring tide and gives local rainfall frequencies.'],
           ['Flood drivers', 'Rainfall runoff draining to a tide-controlled canal: the closest match to the pluvial model.'],
           ['Limitations', 'A model, not an observation; includes canals, culverts and blockages that SFINCS at catchment scale does not resolve; one small catchment.'],
         ]}>
@@ -369,6 +370,7 @@ export function Calibration({ palette, dark }: { palette: Palette; dark: boolean
           event and per district (R1, R3) with event footprints built from the return-period flood maps, and finally the average annual figures.
         </>}>
         <Plan runs={val?.runs ?? []} />
+        <CalibrationSetup palette={palette} dark={dark} />
       </Chapter>
     </div>
   )
@@ -475,7 +477,7 @@ function Plan({ runs }: { runs: Run[] }) {
       <Card title="Approach in four steps" subtitle="Hazard first (calibrate, then validate without retuning), then impacts per event, then average annual figures">
         <TextTable caption="Flooded = water depth above 15 cm. Steps 1–2 use event simulations; steps 3–4 reuse the catalogue of return-period flood maps, so they need no new simulation."
           head={['Step', 'What is done', 'Data source', 'Metrics']} rows={[
-            ['1 · Calibrate the hazard model', 'Simulate Cyclone Cheneso (January 2023) on the Mahajanga catchment with observed rainfall (GESCOD 30-minute gauge if obtained, IMERG otherwise); vary roughness, infiltration (antecedent curve numbers) and a rainfall factor; keep the best parameter set.',
+            ['1 · Calibrate the hazard model', 'Simulate Cyclone Cheneso (19–23 January 2023) around the Metzinger valley with the same forcing as GESCOD (half-hourly GPM IMERG, GESCOD tide at the sea edge), 100 m grid downscaled to 30 m (see 3.1); vary roughness, infiltration (antecedent curve numbers) and a rainfall factor; keep the best parameter set.',
               'H4 GESCOD maximum depth, 1 m, Metzinger valley', 'Critical success index (CSI) and bias of the flooded extent; median and 90th-percentile depth error in the wet area'],
             ['2 · Validate the hazard model', 'Freeze the step 1 parameters and simulate Gezani 2026 (Antananarivo), Batsirai 2022 and Emnati 2022 (Haute Matsiatra) on the catchments of the priority boxes; compare depth at the satellite image time with the mapped extent, only inside the analysed area and in pluvial-candidate areas (coastal strip, river plains, permanent water and rice paddies masked).',
               'H6 Copernicus EMS (Gezani); H5 UNOSAT (Batsirai, Emnati)', 'CSI, hit rate, false alarm ratio, extent bias per analysed area'],
@@ -521,7 +523,7 @@ function Plan({ runs }: { runs: Run[] }) {
 
       <Card title="Commands" subtitle="In order">
         <Steps items={[
-          { title: '1 · Calibrate on Cheneso', body: <><code>python scripts/run_events.py forcing models --event "Cheneso 2023"</code>, then once per parameter set <code>python scripts/run_events.py run score --event "Cheneso 2023" --tag n006 --set-inp manning_land=0.06 --h4 &lt;Cheneso depth tif&gt;</code>. Vary land roughness 0.03–0.10, channel roughness 0.02–0.05, antecedent condition (ARCII/ARCIII) and <code>--rain-factor</code>; keep the best CSI and depth error (scores.csv). Tide at Mahajanga not yet included as downstream level.</> },
+          { title: '1 · Calibrate on Cheneso', body: <><code>python scripts/run_events.py forcing models --event "Cheneso 2023"</code>, then once per parameter set <code>python scripts/run_events.py run score --event "Cheneso 2023" --tag n006 --set-inp manning_land=0.06 --h4 &lt;Cheneso depth tif&gt;</code>. Vary land roughness 0.03–0.10, channel roughness 0.02–0.05, antecedent condition (ARCII/ARCIII) and <code>--rain-factor</code>; keep the best CSI and depth error (scores.csv). The tide boundary, the reduced domain and the 30 m downscaling are being added to the run script (see 3.1).</> },
           { title: '2 · Validate on Gezani, Batsirai, Emnati', body: <><code>python scripts/run_events.py all --event "Gezani 2026" --set priority --tag &lt;best&gt;</code>, and the same for Batsirai 2022 and Emnati 2022 (Emnati reuses the Batsirai models). Scores against H5/H6 are written per analysed area.</> },
           { title: '3 · Event footprints and impacts', body: 'Per cyclone with reported damage: return period of the event rainfall per catchment, interpolated depth map from the return-period catalogue, national merge, overlay with exposure and vulnerability; tables per event and per district against R1 and R3.' },
           { title: '4 · Average annual figures', body: 'Average annual affected population and loss from the risk curve and from the yearly event sums, against R1/R3 over 2000–2018.' },
