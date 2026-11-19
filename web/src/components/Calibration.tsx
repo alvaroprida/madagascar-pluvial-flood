@@ -33,7 +33,7 @@ const RAPID_HEAD = ['Event', 'Image dates', 'Sensors', 'Areas', 'Analysed (km²)
 
 const CHAPTERS_RAW: ChapterEntry[] = [
   { id: 'consolidated', number: 2, title: 'Consolidated validation dataset', summary: 'One table of events with reported impacts from every source side by side, impacts per district, and yearly totals: the reference against which modelled event impacts and average annual figures are compared.' },
-  { id: 'plan', number: 3, title: 'Calibration and validation plan', summary: 'Run sheet per event (window, catchments, rainfall, ground truth, metrics), the steps to follow and the acceptance criteria.' },
+  { id: 'plan', number: 3, title: 'Calibration and validation plan', summary: 'Four-step approach (calibrate on Cheneso, validate on three satellite events, impacts per event, average annual figures), event selection and run sheet.' },
   { id: 'inventory', number: 1, title: 'Inventory of existing calibration and validation datasets', summary: 'What observed and modelled flood data exist for Madagascar, where they lie, what they can and cannot show about pluvial flooding, and which events to simulate next.' },
 ]
 
@@ -365,8 +365,8 @@ export function Calibration({ palette, dark }: { palette: Palette; dark: boolean
       <Chapter entry={CHAPTERS[2]}
         builds={<>the consolidated dataset (Chapter 2) and the per-catchment SFINCS pipeline; event runs are driven by scripts/run_events.py (forcing, models, run, score).</>}
         outcome={<>
-          Calibrate on Cheneso, freeze the parameters, run the priority catchments of the validation events, score them against the ground truth
-          and the reported impacts, then extend to all catchments of each event and report the scores on this tab.
+          Calibrate the hazard model on Cheneso (H4), validate it without retuning on Gezani, Batsirai and Emnati (H5, H6), then validate impacts per
+          event and per district (R1, R3) with event footprints built from the return-period flood maps, and finally the average annual figures.
         </>}>
         <Plan runs={val?.runs ?? []} />
       </Chapter>
@@ -462,44 +462,79 @@ function ValidationDataset({ val, palette }: { val?: Validation; palette: Palett
   )
 }
 
+const SELECTED = ['Cheneso 2023', 'Gezani 2026', 'Batsirai 2022', 'Emnati 2022']
+
 function Plan({ runs }: { runs: Run[] }) {
-  const rows = runs.map((r) => [
+  const sel = SELECTED.map((e) => runs.find((r) => r.event === e)).filter((r): r is Run => !!r)
+  const rows = sel.map((r) => [
     r.event, r.purpose, `${r.window_start.slice(5)} → ${r.window_end}`, r.rainfall.replace('GPM IMERG ', 'IMERG '),
-    `${r.n_catchments} (${fmt(r.area_km2)} km²)`, `${r.priority}: ${r.n_priority} (${fmt(r.priority_km2)} km²)`, r.ground_truth, r.metrics,
+    `${r.priority}: ${r.n_priority} (${fmt(r.priority_km2)} km²)`, r.ground_truth, r.metrics,
   ])
   return (
     <>
-      <Card title="Run sheet" subtitle="One simulation per event; catchments = model catchments intersecting the ground truth; run the priority subset first">
-        <TextTable caption="Catchment ids (all, headwater, priority) are in event_runs.csv"
-          head={['Event', 'Purpose', 'Window (UTC)', 'Rainfall', 'Catchments (all)', 'Priority subset', 'Ground truth', 'Metrics']} rows={rows} />
+      <Card title="Approach in four steps" subtitle="Hazard first (calibrate, then validate without retuning), then impacts per event, then average annual figures">
+        <TextTable caption="Flooded = water depth above 15 cm. Steps 1–2 use event simulations; steps 3–4 reuse the catalogue of return-period flood maps, so they need no new simulation."
+          head={['Step', 'What is done', 'Data source', 'Metrics']} rows={[
+            ['1 · Calibrate the hazard model', 'Simulate Cyclone Cheneso (January 2023) on the Mahajanga catchment with observed rainfall (GESCOD 30-minute gauge if obtained, IMERG otherwise); vary roughness, infiltration (antecedent curve numbers) and a rainfall factor; keep the best parameter set.',
+              'H4 GESCOD maximum depth, 1 m, Metzinger valley', 'Critical success index (CSI) and bias of the flooded extent; median and 90th-percentile depth error in the wet area'],
+            ['2 · Validate the hazard model', 'Freeze the step 1 parameters and simulate Gezani 2026 (Antananarivo), Batsirai 2022 and Emnati 2022 (Haute Matsiatra) on the catchments of the priority boxes; compare depth at the satellite image time with the mapped extent, only inside the analysed area and in pluvial-candidate areas (coastal strip, river plains, permanent water and rice paddies masked).',
+              'H6 Copernicus EMS (Gezani); H5 UNOSAT (Batsirai, Emnati)', 'CSI, hit rate, false alarm ratio, extent bias per analysed area'],
+            ['3 · Validate impacts per event', 'For every cyclone with reported damage: (a) per pluvial catchment, return period of the event rainfall from the catchment rainfall record (GPM, 1998–2025) and the design rainfall curves; (b) event flood map per catchment by interpolating between the return-period flood maps of the catalogue; (c) merge all catchments into one national footprint per event; (d) overlay with exposure and vulnerability.',
+              'R1 cyclone catalogue (national per event); R3 DesInventar (per district); R2/R4 as cross-checks (houses flooded, displaced)', 'People and buildings affected and losses per event vs R1; per district vs R3 (rank correlation, ratio modelled / reported, share of districts hit)'],
+            ['4 · Validate average annual figures', 'Average annual affected population and building loss from the return-period risk curve; yearly sums of the step 3 event footprints over 2000–2018 as a second estimate.',
+              'R1 and R3 yearly totals, 2000–2018', 'Modelled vs reported average per year (people affected, houses destroyed or damaged, loss); modelled must stay below the all-cause totals'],
+          ]} />
+        <Info>
+          Steps 3 and 4 are an upper-bound check: reported figures include wind, river and coastal flooding, so the pluvial model should explain a
+          share of them, close to the totals only for rain-driven events (January 2022 Antananarivo, February–March 2015). R1 has no locations and is
+          used nationally; R3 gives the district split.
+        </Info>
+      </Card>
+
+      <Card title="Events selected for the hazard simulations" subtitle="Four events in three areas; the rest of the satellite events are not simulated">
+        <TextTable caption="Selection criteria: pluvial flooding plausible (inland or urban, away from the coast and big rivers), map detailed enough to see rain-fed water, small model area"
+          head={['Event', 'Ground truth', 'Role', 'Why selected or not']} rows={[
+            ['Cheneso 2023', 'H4 GESCOD depth', 'Calibration (step 1)', 'The only depth reference; urban drainage catchment of 500 ha forced by observed rainfall and tide, so the closest match to the pluvial model; quick to run many times.'],
+            ['Gezani 2026', 'H6 Copernicus EMS', 'Validation (step 2)', 'Very-high-resolution optical map of Antananarivo, the only urban flood map available; 3 catchments (about 1,100 km²). Scored outside the Ikopa plain.'],
+            ['Batsirai 2022', 'H5 UNOSAT (KOMPSAT-5)', 'Validation (step 2)', 'Fianarantsoa highlands: far from the coast and the large river plains, so the mapped water is mostly rain-fed.'],
+            ['Emnati 2022', 'H5 UNOSAT (RCM)', 'Validation (step 2)', 'Same area and models as Batsirai three weeks later: a second, independent check at no extra setup cost.'],
+            ['Ava 2018, Enawo 2017, Jude 2025, Gamane 2024', 'H5 UNOSAT', 'Not simulated', 'Footprints on the east and north-east coastal plains and lower rivers: river and coastal flooding the pluvial model does not represent; large areas (tens of catchments) for little information.'],
+            ['Freddy 2023', 'H5 UNOSAT', 'Not simulated', 'Manakara and Vohipeno: delta and coastal flooding dominate; kept as an optional negative test.'],
+            ['Fytia 2026', 'H6 Copernicus EMS', 'Not simulated (to check)', 'Mapped areas to be checked: if they include Antananarivo, it can replace or complement Gezani.'],
+            ['Diane 2020', 'H5 UNOSAT (VIIRS)', 'Not simulated', 'National map at 375 m: too coarse for pluvial flooding.'],
+            ['Alvaro 2024', 'H5 UNOSAT', 'Not simulated', 'Analysed area only, no flooding mapped.'],
+          ]} />
+        <Info>
+          Parameters are tuned on Cheneso only. The three satellite events are validation: retuning on each would fit the errors of the
+          maps themselves (radar misses water among buildings and under vegetation, and images are taken after the peak, once rain-fed water has partly drained).
+        </Info>
+      </Card>
+
+      <Card title="Run sheet" subtitle="Simulate only the catchments of the priority box, over the storm window plus drainage time">
+        <TextTable caption="Catchment ids are in event_runs.csv (priority_ids). Maps are saved every 3 h so the one nearest the image time can be scored."
+          head={['Event', 'Purpose', 'Window (UTC)', 'Rainfall', 'Catchments simulated', 'Ground truth', 'Metrics']} rows={rows} />
         <p className="mt-3 text-sm text-ink-2">
-          Download: <a className="text-accent underline underline-offset-2" href={dataUrl('validation/event_runs.csv')} download>event_runs.csv</a> (columns
-          catchment_ids, headwater_ids, priority_ids are space-separated basin ids for <code>build_models.py --basin-ids</code>).
+          Download: <a className="text-accent underline underline-offset-2" href={dataUrl('validation/event_runs.csv')} download>event_runs.csv</a> (all
+          candidate events; columns catchment_ids, headwater_ids, priority_ids are space-separated basin ids for <code>build_models.py --basin-ids</code>).
         </p>
       </Card>
 
-      <Card title="Steps" subtitle="In order; each step names its inputs and outputs">
+      <Card title="Commands" subtitle="In order">
         <Steps items={[
-          { title: '0 · Event forcing', body: <><code>python scripts/run_events.py forcing --event "Cheneso 2023"</code> fetches half-hourly GPM IMERG over the window (Final V07 to September 2025, Late afterwards) and writes the catchment-mean hyetograph of each catchment of the chosen set (<code>--set priority|headwater|all</code>). <code>--rain-factor</code> applies a gauge-bias factor (east coast). Antecedent condition: wet curve numbers (GCN250 ARCIII) for cyclones, average for the 2015 rains.</> },
-          { title: '1 · Build the models', body: <><code>python scripts/run_events.py models --event "…" --workers 8</code> builds the catchment models that do not exist yet (pipeline steps inputs and setup); models are shared by events.</> },
-          { title: '2 · Calibrate on Cheneso 2023', body: <>Run catchment 1070036890 (18–29 Jan 2023) once per parameter set, e.g. <code>python scripts/run_events.py run score --event "Cheneso 2023" --tag n006 --set-inp manning_land=0.06 --h4 &lt;Cheneso depth tif&gt;</code>. Vary Manning roughness (land 0.03–0.10, channels 0.02–0.05) and the antecedent condition; keep the set with the best critical success index and depth error against H4 (scores.csv per event). Tide as downstream level is not yet included. Also compare the study's 10-year 24 h storm with our 10-year design depth.</> },
-          { title: '3 · Validate the hazard', body: <>Freeze the parameters (<code>run_events.py all --event "…" --tag &lt;best&gt;</code>). Run Batsirai, Emnati, Gezani, Ana, Feb–Mar 2015 and Freddy on the priority catchments, then all catchments. Score against H5/H6 inside the analysed areas (maximum depth up to the image date, flooded above 15 cm, permanent water and rice paddies masked), against Groundsource locations (hit rate) and against the H2 headwater polygons. Ava and Freddy are negative tests: coastal and fluvial flooding should mostly not be reproduced.</> },
-          { title: '4 · Validate event impacts', body: <>Overlay event depths with exposure: people and buildings above 15 cm and losses per district. Compare buildings flooded with R4 houses flooded (Batsirai 7,098, Emnati 5,826, Gezani 14,330) and people in water with R1–R4 affected (range), and per district with DesInventar.</> },
-          { title: '5 · Validate average annual figures', body: <>Compute the modelled average annual affected population and loss from the design return periods and compare them with the yearly totals over 2000–2018: modelled values must lie below the all-cause totals (R1 about 270,000 people a year, R3 about 114,000–151,000).</> },
-          { title: '6 · Report', body: 'Write scores per event and catchment back to the consolidated dataset and publish them in a results chapter of this tab.' },
+          { title: '1 · Calibrate on Cheneso', body: <><code>python scripts/run_events.py forcing models --event "Cheneso 2023"</code>, then once per parameter set <code>python scripts/run_events.py run score --event "Cheneso 2023" --tag n006 --set-inp manning_land=0.06 --h4 &lt;Cheneso depth tif&gt;</code>. Vary land roughness 0.03–0.10, channel roughness 0.02–0.05, antecedent condition (ARCII/ARCIII) and <code>--rain-factor</code>; keep the best CSI and depth error (scores.csv). Tide at Mahajanga not yet included as downstream level.</> },
+          { title: '2 · Validate on Gezani, Batsirai, Emnati', body: <><code>python scripts/run_events.py all --event "Gezani 2026" --set priority --tag &lt;best&gt;</code>, and the same for Batsirai 2022 and Emnati 2022 (Emnati reuses the Batsirai models). Scores against H5/H6 are written per analysed area.</> },
+          { title: '3 · Event footprints and impacts', body: 'Per cyclone with reported damage: return period of the event rainfall per catchment, interpolated depth map from the return-period catalogue, national merge, overlay with exposure and vulnerability; tables per event and per district against R1 and R3.' },
+          { title: '4 · Average annual figures', body: 'Average annual affected population and loss from the risk curve and from the yearly event sums, against R1/R3 over 2000–2018.' },
         ]} />
       </Card>
 
       <Card title="Acceptance criteria" subtitle="Indicative targets from large-scale flood model validation; to be confirmed after the Cheneso calibration">
-        <TextTable caption="Flooded = water depth above 15 cm; scores computed only where the ground truth observed (analysed areas)"
-          head={['Check', 'Metric', 'Target']} rows={[
-            ['Extent vs satellite / H4', 'Critical success index', '≥ 0.5 (headwater, urban); ≥ 0.3 elsewhere'],
-            ['Extent vs satellite / H4', 'Bias (modelled / observed flooded area)', '0.8 – 1.25'],
-            ['Depth vs H4', 'Median absolute error in the wet area', '< 0.2 m'],
-            ['Groundsource locations', 'Hit rate', '≥ 0.7'],
-            ['Negative tests (Ava, Freddy)', 'Share of coastal / fluvial observed flooding reproduced', 'Low (< 0.3)'],
-            ['Event impacts', 'Modelled buildings / people vs reported', 'Within a factor 2 of the reported range, below all-cause totals'],
-            ['Average annual figures', 'Modelled vs yearly totals 2000–2018', 'Below R1; same order of magnitude as the rain-driven share'],
+        <TextTable caption="Flooded = water depth above 15 cm; extent scores computed only where the ground truth observed (analysed areas)"
+          head={['Step', 'Metric', 'Target']} rows={[
+            ['1 · Cheneso vs H4', 'CSI; extent bias; median absolute depth error', '≥ 0.5; 0.8–1.25; < 0.2 m'],
+            ['2 · Satellite events', 'CSI in pluvial-candidate areas; hit rate', '≥ 0.3 (≥ 0.5 in town); ≥ 0.5'],
+            ['3 · Events vs R1 / R3', 'Modelled people and buildings affected vs reported', 'Below the reported totals; within a factor 2 for rain-driven events; districts ranked consistently'],
+            ['4 · Average annual figures', 'Modelled vs yearly totals 2000–2018', 'Below R1 (about 270,000 people / year) and R3; same order as the rain-driven share'],
           ]} />
       </Card>
     </>
