@@ -170,7 +170,7 @@ export function CalibrationSetup({ palette, dark }: { palette: Palette; dark: bo
             ['Grid', `${s.res_m} m, UTM 38S; sub-grid ${s.subgrid_m} m from FABDEM (bare-earth, 30 m); output downscaled to ${s.downscale_m} m`, 'GESCOD: 1 m mesh on a local survey, RN4 embankment and FITIM bridge culverts included'],
             ['Roughness', 'Manning from land cover (ESA/VITO classes: built-up 0.10, cropland 0.037, grass 0.034, shrubs 0.05, forest 0.10–0.11), in the sub-grid tables; varied by a factor in the sensitivity runs', 'GESCOD: 0.04 everywhere'],
             ['Infiltration', `SCS curve number, ${s.gcn_arc} (wet soils, as for cyclone design storms)`, `GESCOD: CN ${s.gescod_cn} (basin mean)`],
-            ['Boundaries', 'Sea edge: GESCOD tide as water level; land edge: free outflow', 'GESCOD: tide at the downstream limit'],
+            ['Boundaries', 'GESCOD tide as water level on every edge cell the sea reaches: cells next to the sea and edge cells whose lowest point is below 2.5 m (highest tide + 0.4 m: estuary, mudflats); free outflow on the higher land edge', 'GESCOD: tide at the downstream limit'],
             ['Drainage network', 'Not represented (no culverts, canal only as resolved by the terrain)', 'GESCOD: main canal and culverts'],
           ].map(([k, v, g]) => <tr key={k}><td className="font-medium text-ink">{k}</td><td className="text-ink-2">{v}</td><td className="text-ink-3">{g}</td></tr>)}
         </tbody></table>
@@ -198,10 +198,10 @@ export function CalibrationSetup({ palette, dark }: { palette: Palette; dark: bo
 
 const RUN_LABEL: Record<string, string> = {
   base: 'Base: production set-up', rough_x0p5: 'Roughness × 0.5', rough_x2: 'Roughness × 2', arcii: 'Average soil moisture (ARCII)',
-  gescod_inputs: "GESCOD's roughness (0.04) and curve number (84.3)", imerg_valley: 'IMERG V07B rainfall over the same basin',
+  gescod_inputs: "GESCOD's roughness (0.04) and curve number (84.3)", res50: 'Grid 50 m instead of 100 m', imerg_valley: 'IMERG V07B rainfall over the same basin',
   imerg_catchment: 'IMERG V07B rainfall, whole-catchment mean',
 }
-const ORDER = ['base', 'rough_x0p5', 'rough_x2', 'arcii', 'gescod_inputs', 'imerg_valley', 'imerg_catchment']
+const ORDER = ['base', 'rough_x0p5', 'rough_x2', 'arcii', 'gescod_inputs', 'res50', 'imerg_valley', 'imerg_catchment']
 const RAIN_RUNS = ['imerg_valley', 'imerg_catchment']
 
 function Results({ s, dark }: { s: Setup; dark: boolean }) {
@@ -210,8 +210,9 @@ function Results({ s, dark }: { s: Setup; dark: boolean }) {
   const [op, setOp] = useState(0.8)
   const sc = ORDER.map((t) => s.scores!.find((x) => x.tag === t)).filter((x): x is Score => !!x)
   const b = sc.find((x) => x.tag === 'base')!
-  const sens = sc.filter((x) => !RAIN_RUNS.includes(x.tag))
+  const sens = sc.filter((x) => !RAIN_RUNS.includes(x.tag) && x.tag !== 'res50')
   const iv = sc.find((x) => x.tag === 'imerg_valley')
+  const r50 = sc.find((x) => x.tag === 'res50')
   const ratios = sens.map((x) => x.obs_flooded_ha / x.mod_flooded_ha)
   const csis = sens.map((x) => x.csi)
   const err = sens.map((x) => x.depth_median_error_m)
@@ -267,6 +268,12 @@ function Results({ s, dark }: { s: Setup; dark: boolean }) {
           the CSI between {f(Math.min(...csis))} and {f(Math.max(...csis))} and the median depth error between {f(Math.min(...err))} and {f(Math.max(...err))} m.
           Rougher land floods slightly more; soil moisture hardly matters with about 490 mm of rain; GESCOD's own roughness and curve number flood
           less, not more. Tuning would not close the gap, which comes from terrain and structures.</li>
+        <li><b className="text-ink">Tide on the whole low boundary.</b> Free outflow on the estuary and mudflat edges let the low basin drain even at
+          high tide; giving the tide to every edge cell below 2.5 m (the highest tide + 0.4 m) raised the flooded area by about 15% and the CSI to
+          {' '}{f(b.csi)}, mostly in the south-east basin near the estuary.</li>
+        {r50 && <li><b className="text-ink">A finer grid does not help.</b> At 50 m (same 25 m sub-grid terrain) the model floods {fmt(r50.mod_flooded_ha, 0)} ha
+          with a CSI of {f(r50.csi)} and more false alarms ({f(r50.far)}), for four times the cells and about seven times the run time: the sub-grid
+          already carries the 25 m terrain, and the remaining gap comes from the terrain data and the missing structures, not the grid.</li>}
         {iv && <li><b className="text-ink">Rainfall matters most.</b> With IMERG V07B over the same basin (about half of GESCOD's rain) the flooded area drops
           to {fmt(iv.mod_flooded_ha, 0)} ha (×{f(iv.obs_flooded_ha / iv.mod_flooded_ha, 1)}): the rainfall product weighs more than any parameter, which matters
           for the design storms built from IMERG.</li>}
