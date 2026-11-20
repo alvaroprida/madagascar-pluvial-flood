@@ -263,7 +263,40 @@ function Results({ d, e, dark, picker }: { d: Data; e: Ev; dark: boolean; picker
         </>
       )}
       <h4 className="pt-2 text-base font-semibold text-ink">Conclusions</h4>
-      <Info>To be written when the three events have finished.</Info>
+      <Conclusions d={d} />
     </>
+  )
+}
+
+function Conclusions({ d }: { d: Data }) {
+  const get = (ev: string) => d.events.find((x) => x.event === ev)?.results
+  const hi = ['Batsirai 2022', 'Emnati 2022'].map(get).filter((r): r is NonNullable<Ev['results']> => !!r?.max && !!r?.image)
+  const gz = get('Gezani 2026')
+  if (!hi.length) return <Info>To be written when the events have finished.</Info>
+  const f = (v: number, n = 2) => fmt(v, n)
+  const rng = (vals: number[], n = 2) => (vals.length > 1 ? `${f(Math.min(...vals), n)}–${f(Math.max(...vals), n)}` : f(vals[0], n))
+  const mx = hi.map((r) => r.max!.scores)
+  const im = hi.map((r) => r.image!.scores)
+  return (
+    <ul className="list-disc space-y-1.5 pl-5 text-sm text-ink-2">
+      <li><b className="text-ink">The model floods the right places.</b> In the Fianarantsoa highlands (Batsirai, Emnati) its maximum extent covers
+        {' '}{rng(mx.map((x) => 100 * x.hit_rate), 0)}% of the flooding the satellite mapped: the flood-prone valley floors and depressions are identified.</li>
+      <li><b className="text-ink">Peak extent larger than what the satellite saw, mostly because of timing.</b> At its peak the model floods
+        {' '}{rng(mx.map((x) => x.bias), 1)} times the area the satellite mapped; at the time of the images (up to six days after the rain) the totals
+        match ({rng(im.map((x) => x.bias), 1)} times). The images record what was still flooded days later, not the peak the design maps represent.</li>
+      <li><b className="text-ink">The water that stays is not modelled.</b> At the image time only {rng(im.map((x) => 100 * x.hit_rate), 0)}% of the
+        satellite flooding is still wet in the model: the satellite sees water that drains slowly (rice fields behind bunds, flat valley bottoms,
+        backwaters and river margins), while the pluvial model on bare-earth terrain drains these in hours. River flooding, which the satellite also
+        records, is outside the model.</li>
+      {gz?.max && gz?.image && <li><b className="text-ink">Antananarivo (Gezani) is a weaker test.</b> With about 60 mm of rain over the event
+        (IMERG), the model floods {fmt(gz.max.scores.mod_flooded_ha, 0)} ha at its peak against {fmt(gz.max.scores.obs_flooded_ha, 0)} ha mapped by
+        Copernicus EMS on 18 February (hit rate {f(gz.max.scores.hit_rate)}, CSI {f(gz.max.scores.csi)}; at the image time
+        {' '}{f(gz.image.scores.hit_rate)} and {f(gz.image.scores.csi)}). Most of the mapped water lies in the Ikopa plain and rice fields, filled by the
+        river and by days of standing water rather than by local rain.</li>}
+      <li><b className="text-ink">What it means for the hazard maps.</b> The design maps show peak pluvial depths; satellite images taken days later
+        can confirm where flooding happens, not how far it reaches at the peak or how deep it is. Together with the Mahajanga benchmark (3.1), the
+        production model is plausible in location and order of magnitude; it does not represent slow-draining farmland, embankments or river
+        flooding, which should be stated as limitations.</li>
+    </ul>
   )
 }
