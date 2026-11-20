@@ -6,6 +6,7 @@ import { dataUrl } from '../data'
 import type { Palette } from '../theme'
 import { CalibrationMap } from './CalibrationMap'
 import { CalibrationSetup } from './CalibrationSetup'
+import { SatelliteValidation } from './SatelliteValidation'
 import { ANNUAL_LOSSES, MAJOR_EVENTS } from './calibrationLosses'
 import { Card, Chapter, ChapterIndex, Chart, DataTable, Figure, Info, Stat, Steps, Toggle, type ChapterEntry } from './ui'
 
@@ -373,6 +374,7 @@ export function Calibration({ palette, dark }: { palette: Palette; dark: boolean
         </>}>
         <Plan runs={val?.runs ?? []} />
         <CalibrationSetup palette={palette} dark={dark} />
+        <SatelliteValidation palette={palette} dark={dark} />
       </Chapter>
     </div>
   )
