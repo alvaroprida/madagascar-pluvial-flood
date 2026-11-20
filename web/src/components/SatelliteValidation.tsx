@@ -16,12 +16,13 @@ interface Img { file: string; coordinates: Corners }
 interface Scores {
   csi: number; hit_rate: number; far: number; bias: number; obs_flooded_ha: number; mod_flooded_ha: number; valid_km2: number; mod_flooded_domain_km2: number
 }
+interface Res { scores: Scores; depth: Img; compare: Img }
 interface Ev {
   event: string; slug: string; area: string; source: string; sensor: string; image_date: string; image_time: string; image_note: string; window: [string, string]
   n_catchments: number; cells: number; domain_km2: number; analysed_km2: number; sat_flooded_km2: number
   setup: string; catchments: string; satellite_image: Img | null; bounds: { analysed: Bounds; domain: Bounds }
   rain: { product: string; series: { t: string; mean: number; max: number }[]; total_mm: { min: number; mean: number; max: number }; peak_mm_hr: number; wettest: string }
-  results?: { n_done: number; scores: Scores; depth: Img; compare: Img }
+  results?: { n_done: number; image_time_used: string; max?: Res; image?: Res }
 }
 interface Data { events: Ev[]; legend: Record<'depth' | 'compare' | 'satellite', { value: string; color: string }[]> }
 
@@ -151,8 +152,11 @@ export function SatelliteValidation({ palette, dark }: { palette: Palette; dark:
           real events, with the parameters left as in the benchmark (3.1). The three events are those where rain-fed flooding is most plausible: the
           Fianarantsoa highlands, far from the coast and the large river plains (Batsirai, Emnati), and Antananarivo, the only very-high-resolution
           urban flood map (Gezani).</p>
-        <p><b className="text-ink">How it is scored.</b> Maximum depth over the event window (ending on the last image) above 15 cm, compared
-          with the satellite flood extent only inside the area the satellite analysed and that the simulated catchments cover. The satellite extent is
+        <p><b className="text-ink">How it is scored.</b> Modelled flooding (above 15 cm) compared with the satellite flood extent only inside the
+          area the satellite analysed and that the simulated catchments cover, in two ways: the maximum depth over the event window, and the depth at
+          the time of the image. The images were taken several days after the rain peak (about six days for Batsirai and Gezani), when rain-fed
+          water had partly drained: the maximum overstates what the satellite could see, the image-time map is the like-for-like comparison but
+          depends on how fast the model drains (no rice-field bunds, no slow seepage). The satellite extent is
           water detected after the event minus normal water. Limits: images are taken after the peak, when rain-fed water has partly drained; radar
           misses water among buildings and under vegetation; the satellite also sees river flooding, which a pluvial model does not represent. Scores
           are therefore read as plausibility (where the model floods and does not), not as accuracy.</p>
@@ -205,21 +209,23 @@ export function SatelliteValidation({ palette, dark }: { palette: Palette; dark:
 
 function Results({ d, e, dark, picker }: { d: Data; e: Ev; dark: boolean; picker: ReactNode }) {
   const [show, setShow] = useState({ sat: false, model: false, compare: true })
+  const [when, setWhen] = useState<'max' | 'image'>('max')
   const [op, setOp] = useState(0.8)
   const done = d.events.filter((x) => x.results)
-  const r = e.results
+  const r = e.results?.[when] ?? e.results?.max
   const images = [
     ...(show.sat && e.satellite_image ? [{ id: `rs-${e.slug}`, img: e.satellite_image }] : []),
-    ...(show.model && r ? [{ id: `rm-${e.slug}`, img: r.depth }] : []),
-    ...(show.compare && r ? [{ id: `rc-${e.slug}`, img: r.compare }] : []),
+    ...(show.model && r ? [{ id: `rm-${e.slug}-${when}`, img: r.depth }] : []),
+    ...(show.compare && r ? [{ id: `rc-${e.slug}-${when}`, img: r.compare }] : []),
   ]
   const legends = [
     ...(show.sat ? [{ title: 'Satellite flood extent', items: d.legend.satellite }] : []),
-    ...(show.model ? [{ title: 'Maximum depth (above 15 cm)', items: d.legend.depth }] : []),
+    ...(show.model ? [{ title: when === 'max' ? 'Maximum depth (above 15 cm)' : 'Depth at the image time (above 15 cm)', items: d.legend.depth }] : []),
     ...(show.compare ? [{ title: 'Flooded above 15 cm', items: d.legend.compare }] : []),
   ]
   const toggle = (k: keyof typeof show) => setShow((x) => ({ ...x, [k]: !x[k] }))
   const f = (v: number, n = 2) => fmt(v, n)
+  const rows = done.flatMap((x) => (['max', 'image'] as const).filter((k) => x.results![k]).map((k) => ({ x, k, s: x.results![k]!.scores })))
   return (
     <>
       <h4 className="pt-2 text-base font-semibold text-ink">Results</h4>
@@ -227,29 +233,33 @@ function Results({ d, e, dark, picker }: { d: Data; e: Ev; dark: boolean; picker
       {r ? (
         <>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-ink-2">
+            <span>Model</span>
+            <Pill on={when === 'max'} onClick={() => setWhen('max')}>Maximum over the window</Pill>
+            <Pill on={when === 'image'} onClick={() => setWhen('image')}>At the image time</Pill>
             {([['sat', 'Satellite flood extent'], ['model', 'This model depth (30 m)'], ['compare', 'Comparison']] as const).map(([k, lab]) => (
               <label key={k} className="flex items-center gap-1.5"><input type="checkbox" className="accent-accent" checked={show[k]} onChange={() => toggle(k)} />{lab}</label>
             ))}
             <Opacity value={op} onChange={setOp} />
-            {r.n_done < e.n_catchments && <span className="text-xs text-accent">{r.n_done} of {e.n_catchments} catchments done; runs in progress</span>}
           </div>
           <EventMap e={e} dark={dark} opacity={op} images={images} legends={legends} />
         </>
       ) : <Info>Simulations of {e.event} are running; the map and scores appear here when they are done.</Info>}
-      {done.length > 0 && (
+      {rows.length > 0 && (
         <>
           <table className="w-full text-sm"><thead><tr className="text-left text-ink-3 [&_th]:pb-1 [&_th]:pr-3">
-            <th>Event</th><th>Catchments</th><th>Analysed (km²)</th><th>Flooded, model / satellite (ha)</th><th>CSI</th><th>Hit rate</th><th>False alarms</th><th>Bias</th>
+            <th>Event</th><th>Model</th><th>Analysed (km²)</th><th>Flooded, model / satellite (ha)</th><th>Bias</th><th>CSI</th><th>Hit rate</th><th>False alarms</th>
           </tr></thead><tbody className="[&_td]:border-t [&_td]:border-line [&_td]:py-1.5 [&_td]:pr-3">
-            {done.map((x) => (
-              <tr key={x.event} className={x.event === e.event ? 'bg-accent/10 font-semibold text-ink' : 'text-ink-2'}>
-                <td>{x.event}</td><td>{x.results!.n_done} / {x.n_catchments}</td><td>{f(x.results!.scores.valid_km2, 1)}</td>
-                <td>{fmt(x.results!.scores.mod_flooded_ha, 0)} / {fmt(x.results!.scores.obs_flooded_ha, 0)}</td>
-                <td>{f(x.results!.scores.csi)}</td><td>{f(x.results!.scores.hit_rate)}</td><td>{f(x.results!.scores.far)}</td><td>{f(x.results!.scores.bias)}</td>
+            {rows.map(({ x, k, s }) => (
+              <tr key={x.event + k} className={x.event === e.event && k === when ? 'bg-accent/10 font-semibold text-ink' : 'text-ink-2'}>
+                <td>{k === 'max' ? x.event : ''}</td><td>{k === 'max' ? 'maximum' : `at ${x.results!.image_time_used.slice(0, 16)} UTC`}</td>
+                <td>{f(s.valid_km2, 1)}</td><td>{fmt(s.mod_flooded_ha, 0)} / {fmt(s.obs_flooded_ha, 0)}</td>
+                <td>{f(s.bias)}</td><td>{f(s.csi)}</td><td>{f(s.hit_rate)}</td><td>{f(s.far)}</td>
               </tr>))}
           </tbody></table>
-          <p className="text-xs text-ink-3">Inside the analysed area within the simulated catchments, 30 m grid. Hit rate = share of the satellite flood extent
-            the model floods; false alarms = share of the modelled flooding the satellite does not see; bias = modelled / satellite flooded area.</p>
+          <p className="text-xs text-ink-3">Inside the analysed area within the simulated catchments, 30 m grid. Maximum = deepest water over the window;
+            at the image time = the saved 3-hourly map nearest the image (UNOSAT gives the date only: noon is used). Bias = modelled / satellite
+            flooded area; hit rate = share of the satellite flood extent the model floods; false alarms = share of the modelled flooding the satellite
+            does not see.</p>
         </>
       )}
       <h4 className="pt-2 text-base font-semibold text-ink">Conclusions</h4>
