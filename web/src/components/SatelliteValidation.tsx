@@ -17,7 +17,7 @@ interface Scores {
   csi: number; hit_rate: number; far: number; bias: number; obs_flooded_ha: number; mod_flooded_ha: number; valid_km2: number; mod_flooded_domain_km2: number
 }
 interface Ev {
-  event: string; slug: string; area: string; source: string; sensor: string; image_date: string; window: [string, string]
+  event: string; slug: string; area: string; source: string; sensor: string; image_date: string; image_time: string; image_note: string; window: [string, string]
   n_catchments: number; cells: number; domain_km2: number; analysed_km2: number; sat_flooded_km2: number
   setup: string; catchments: string; satellite_image: Img | null; bounds: { analysed: Bounds; domain: Bounds }
   rain: { product: string; series: { t: string; mean: number; max: number }[]; total_mm: { min: number; mean: number; max: number }; peak_mm_hr: number; wettest: string }
@@ -103,22 +103,25 @@ function Opacity({ value, onChange }: { value: number; onChange: (v: number) => 
   )
 }
 
-const isoDate = (d: string) => (d && d.length === 8 ? `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6)}` : d)
-
 function rainChart(p: Palette, e: Ev): EChartsOption {
   const axis = { axisLabel: { color: p['text-secondary'] }, axisLine: { lineStyle: { color: p.axis } }, splitLine: { lineStyle: { color: p.grid } }, nameTextStyle: { color: p['text-secondary'] } }
-  const ms = (t: string) => new Date(t.replace(' ', 'T') + 'Z').getTime()
-  const img = isoDate(e.image_date)
+  const ms = (t: string) => new Date(t.replace(' ', 'T') + (t.length <= 16 ? ':00Z' : 'Z')).getTime()
+  const img = e.image_time ? ms(e.image_time) : undefined
+  const t0 = ms(e.rain.series[0].t)
+  const t1 = Math.max(ms(e.rain.series[e.rain.series.length - 1].t), (img ?? 0) + 12 * 3600e3)
   return {
     grid: { left: 56, right: 24, top: 40, bottom: 40 },
     legend: { top: 0, textStyle: { color: p['text-secondary'] } },
     tooltip: { trigger: 'axis' },
-    xAxis: { type: 'time', ...axis },
+    xAxis: { type: 'time', ...axis, min: t0, max: t1 },
     yAxis: { type: 'value', name: 'Rain (mm/h)', ...axis },
     series: [
       { name: 'Mean of the simulated catchments', type: 'bar', barWidth: '90%', itemStyle: { color: p.accent }, data: e.rain.series.map((r) => [ms(r.t), r.mean]),
-        markLine: img ? { symbol: 'none', lineStyle: { color: '#e45756', type: 'dashed' }, label: { formatter: 'satellite image', color: p['text-secondary'] },
-          data: [{ xAxis: ms(`${img} 00:00:00`) }] } : undefined },
+        markArea: { itemStyle: { color: 'rgba(44,160,44,0.08)' }, label: { color: p['text-secondary'], fontSize: 11, position: 'insideTopLeft' },
+          data: [[{ name: 'Simulated window', xAxis: ms(`${e.window[0]} 00:00`) }, { xAxis: ms(`${e.window[1]} 00:00`) + 24 * 3600e3 }]] },
+        markLine: img ? { symbol: 'none', lineStyle: { color: '#e45756', type: 'dashed', width: 1.5 },
+          label: { formatter: `satellite image ${e.image_time.slice(0, 10)}${e.image_time.endsWith('00:00') ? '' : ` ${e.image_time.slice(11)} UTC`}`, color: '#e45756', position: 'insideEndTop' },
+          data: [{ xAxis: img }] } : undefined },
       { name: `Wettest catchment (${e.rain.wettest})`, type: 'line', step: 'end', showSymbol: false, lineStyle: { width: 1, color: p['text-muted'] },
         itemStyle: { color: p['text-muted'] }, data: e.rain.series.map((r) => [ms(r.t), r.max]) },
     ],
@@ -158,7 +161,7 @@ export function SatelliteValidation({ palette, dark }: { palette: Palette; dark:
       <p className="text-sm text-ink-2">{DESCRIPTION[e.event]}</p>
       <div className="grid gap-3 sm:grid-cols-4">
         <Stat label="Simulated catchments" value={`${e.n_catchments}`} sub={`${fmt(e.domain_km2)} km², ${fmt(e.cells)} cells at 100 m`} />
-        <Stat label="Analysed by the satellite" value={`${fmt(e.analysed_km2, 1)} km²`} sub={`within the catchments; ${e.sensor}${e.image_date ? `, ${isoDate(e.image_date)}` : ''}`} />
+        <Stat label="Analysed by the satellite" value={`${fmt(e.analysed_km2, 1)} km²`} sub={`within the catchments; image ${e.image_time ? e.image_time.slice(0, 10) : '–'} (${e.image_note})`} />
         <Stat label="Satellite flood extent" value={`${fmt(e.sat_flooded_km2, 2)} km²`} sub="inside the analysed area" />
         <Stat label="Rain over the window" value={`${fmt(e.rain.total_mm.mean)} mm`} sub={`catchments ${e.rain.total_mm.min}–${e.rain.total_mm.max} mm; peak ${e.rain.peak_mm_hr} mm/h`} />
       </div>
@@ -180,7 +183,7 @@ export function SatelliteValidation({ palette, dark }: { palette: Palette; dark:
             ['Infiltration', 'SCS curve number, ARCIII (wet soils, as for cyclone design storms)'],
             ['Boundaries', 'Free outflow on the catchment edge (inland catchments: no tide)'],
             ['Rainfall', `${e.rain.product}, half-hourly, averaged over each catchment and applied uniformly; window ${e.window[0]} to ${e.window[1]} (+24 h drainage)`],
-            ['Ground truth', `${e.source}, ${e.sensor}${e.image_date ? `, image of ${isoDate(e.image_date)}` : ''}; flood extent and analysed area`],
+            ['Ground truth', `${e.source}, ${e.image_note}${e.image_time ? `, image of ${e.image_time}${e.image_time.endsWith('00:00') ? '' : ' UTC'}` : ''}; flood extent and analysed area`],
           ].map(([k, v]) => <tr key={k}><td className="w-36 font-medium text-ink">{k}</td><td className="text-ink-2">{v}</td></tr>)}
         </tbody></table>
       </Toggle>
