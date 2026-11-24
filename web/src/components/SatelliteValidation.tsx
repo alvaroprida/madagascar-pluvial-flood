@@ -129,7 +129,7 @@ function rainChart(p: Palette, e: Ev): EChartsOption {
   }
 }
 
-/** Chapter 3.2: event simulations of the production set-up against satellite flood extents. */
+/** Chapter 2.1.2: event simulations of the production set-up against satellite flood extents. */
 export function SatelliteValidation({ palette, dark }: { palette: Palette; dark: boolean }) {
   const [d, setD] = useState<Data>()
   const [ev, setEv] = useState('Batsirai 2022')
@@ -145,11 +145,11 @@ export function SatelliteValidation({ palette, dark }: { palette: Palette; dark:
     </div>
   )
   return (
-    <Toggle title="3.1.2 · Validation against satellite flood maps: Gezani 2026, Batsirai 2022, Emnati 2022">
+    <Toggle title="2.1.2 · Validation against satellite flood maps: Gezani 2026, Batsirai 2022, Emnati 2022">
       <div className="space-y-3 text-sm text-ink-2">
         <p><b className="text-ink">Purpose.</b> Check the production set-up (whole catchments, 100 m grid with 25 m sub-grid, depths downscaled to
           30 m on FABDEM, land-cover roughness, wet-soil curve numbers, satellite rainfall) against flood extents mapped from satellite images during
-          real events, with the parameters left as in the benchmark (3.1.1). The three events are those where rain-fed flooding is most plausible: the
+          real events, with the parameters left as in the benchmark (2.1.1). The three events are those where rain-fed flooding is most plausible: the
           Fianarantsoa highlands, far from the coast and the large river plains (Batsirai, Emnati), and Antananarivo, the only very-high-resolution
           urban flood map (Gezani).</p>
         <p><b className="text-ink">How it is scored.</b> Modelled flooding (above 15 cm) compared with the satellite flood extent only inside the
@@ -196,7 +196,7 @@ export function SatelliteValidation({ palette, dark }: { palette: Palette; dark:
         <Chart option={rainChart(palette, e)} height={320} label={`Half-hourly IMERG rainfall over the simulated catchments for ${e.event}`} />
         <Info>
           {e.rain.product}, averaged over each simulated catchment: {fmt(e.rain.total_mm.mean)} mm on average over the window
-          ({e.rain.total_mm.min}–{e.rain.total_mm.max} mm between catchments), peak {e.rain.peak_mm_hr} mm/h. In Mahajanga (3.1.1) the same IMERG release
+          ({e.rain.total_mm.min}–{e.rain.total_mm.max} mm between catchments), peak {e.rain.peak_mm_hr} mm/h. In Mahajanga (2.1.1) the same IMERG release
           gave about half the rainfall of the series used by the local study, so these totals may be low.
           {e.event === 'Gezani 2026' && ' Over Antananarivo the rain is light; the flooding Copernicus EMS mapped there lies mostly in the Ikopa plain and is likely driven by the river.'}
         </Info>
@@ -294,7 +294,7 @@ function Conclusions({ d }: { d: Data }) {
         {' '}{f(gz.image.scores.hit_rate)} and {f(gz.image.scores.csi)}). Most of the mapped water lies in the Ikopa plain and rice fields, filled by the
         river and by days of standing water rather than by local rain.</li>}
       <li><b className="text-ink">What it means for the hazard maps.</b> The design maps show peak pluvial depths; satellite images taken days later
-        can confirm where flooding happens, not how far it reaches at the peak or how deep it is. Together with the Mahajanga benchmark (3.1.1), the
+        can confirm where flooding happens, not how far it reaches at the peak or how deep it is. Together with the Mahajanga benchmark (2.1.1), the
         production model is plausible in location and order of magnitude; it does not represent slow-draining farmland, embankments or river
         flooding, which should be stated as limitations.</li>
     </ul>

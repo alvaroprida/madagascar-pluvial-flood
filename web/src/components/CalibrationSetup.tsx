@@ -125,7 +125,7 @@ function forcingChart(p: Palette, s: Setup): EChartsOption {
   }
 }
 
-/** Chapter 3.1: benchmark of the production set-up against the GESCOD local model for Cheneso. */
+/** Chapter 2.1.1: benchmark of the production set-up against the GESCOD local model for Cheneso. */
 export function CalibrationSetup({ palette, dark }: { palette: Palette; dark: boolean }) {
   const [s, setS] = useState<Setup>()
   const [img, setImg] = useState('dem')
@@ -137,7 +137,7 @@ export function CalibrationSetup({ palette, dark }: { palette: Palette; dark: bo
   const acc = (o?: Record<string, number>) => Object.values(o ?? {}).map((v) => fmt(v, 0)).join(', ')
   const cur = s.images[img]
   return (
-    <Toggle title="3.1.1 · Benchmark against a local model: Cyclone Cheneso, Mahajanga (January 2023)">
+    <Toggle title="2.1.1 · Benchmark against a local model: Cyclone Cheneso, Mahajanga (January 2023)">
       <div className="space-y-3 text-sm text-ink-2">
         <p><b className="text-ink">Purpose.</b> Check that the production set-up ({s.res_m} m grid with {s.subgrid_m} m sub-grid, depths
           downscaled to {s.downscale_m} m on FABDEM, land-cover roughness, wet-soil curve numbers) gives a flood of the same order of magnitude as
